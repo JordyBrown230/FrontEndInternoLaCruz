@@ -45,9 +45,11 @@ const Municipalidad: React.FC = () => {
     }, []);
 
     const [attractions, setAttractions] = useState<Attraction[]>([]);
+    const [filteredAttractions, setFilteredAttractions] = useState<Attraction[]>([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [currentAttraction, setCurrentAttraction] = useState<Attraction | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const handleClickOpen = (attraction: Attraction | null = null) => {
         setCurrentAttraction(attraction);
@@ -73,6 +75,7 @@ const Municipalidad: React.FC = () => {
             toast.success('Atracción agregada con éxito');
         }
         setAttractions(updatedAttractions);
+        setFilteredAttractions(updatedAttractions); // Actualiza también las atracciones filtradas
         handleCloseDialog(); // Cierra el diálogo después de guardar
     };
 
@@ -80,6 +83,7 @@ const Municipalidad: React.FC = () => {
         if (currentAttraction) {
             const updatedAttractions = attractions.filter(a => a.id !== currentAttraction.id);
             setAttractions(updatedAttractions);
+            setFilteredAttractions(updatedAttractions); // Actualiza también las atracciones filtradas
             toast.success('Atracción eliminada con éxito');
         }
         handleCloseDialog();
@@ -93,6 +97,17 @@ const Municipalidad: React.FC = () => {
     const getWazeUrl = (lat: number, lng: number) => `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes`;
     const getGoogleMapsUrl = (lat: number, lng: number) => `https://www.google.com/maps?q=${lat},${lng}`;
 
+    const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
+        const query = event.target.value.toLowerCase();
+        setSearchQuery(query);
+
+        const filtered = attractions.filter(attraction =>
+            attraction.title.toLowerCase().includes(query) ||
+            attraction.description.toLowerCase().includes(query)
+        );
+        setFilteredAttractions(filtered);
+    };
+
     return (
         <PageContainer title="Atracciones Turísticas" description="Una página para gestionar atracciones turísticas">
             <DashboardCard title="Gestión de Atracciones Turísticas">
@@ -104,8 +119,17 @@ const Municipalidad: React.FC = () => {
                             Agregar Nueva Atracción
                         </Button>
                     </Box>
+                    <TextField
+                        label="Buscar"
+                        variant="outlined"
+                        fullWidth
+                        margin="dense"
+                        onChange={handleSearch}
+                        value={searchQuery}
+                        sx={{ mb: 4 }}
+                    />
                     <Grid container spacing={4} justifyContent="center">
-                        {attractions.map((attraction) => (
+                        {filteredAttractions.map((attraction) => (
                             <Grid item xs={12} md={6} key={attraction.id} data-aos="fade-up">
                                 <Card>
                                     <Carousel>
