@@ -22,6 +22,12 @@ const Menuitems = [
     icon: IconBuilding,
     href: "/crud-atraccionesTuristicas",
   },
+  {
+    id: uniqueId(),
+    title: "Transportes",
+    icon: IconBuilding,
+    href: "/crud-transportes",
+  },
 ];
 
 export default Menuitems;
