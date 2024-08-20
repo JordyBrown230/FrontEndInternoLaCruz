@@ -110,7 +110,7 @@ const Municipalidad: React.FC = () => {
 
     return (
         <PageContainer title="Atracciones Turísticas" description="Una página para gestionar atracciones turísticas">
-            <DashboardCard title="Gestión de Atracciones Turísticas">
+            <DashboardCard>
                 <Box>
                     <Box textAlign="center" mb={4}>
                         <Typography variant="h2" gutterBottom data-aos="fade-down">Gestión de Atracciones Turísticas</Typography>
