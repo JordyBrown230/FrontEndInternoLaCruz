@@ -1,6 +1,8 @@
 import {
   IconHome,
-  IconBuilding
+  IconBuilding,
+  IconMap,
+  IconBus,
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -12,20 +14,20 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
-    title: "CRUD Empresas",
+    title: "Empresas",
     icon: IconBuilding,
     href: "/crud-empresas",
   },
   {
     id: uniqueId(),
     title: "Atracciones Turísticas",
-    icon: IconBuilding,
+    icon: IconMap,
     href: "/crud-atraccionesTuristicas",
   },
   {
     id: uniqueId(),
     title: "Transportes",
-    icon: IconBuilding,
+    icon: IconBus,
     href: "/crud-transportes",
   },
 ];

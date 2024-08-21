@@ -36,6 +36,9 @@ const Sidebar = ({
             sx: {
               width: sidebarWidth,
               boxSizing: "border-box",
+              backgroundColor: "#CDE4FF", // Color de fondo para desktop
+              borderTopRightRadius: "20px",  // Redondear solo la esquina superior derecha
+              borderBottomRightRadius: "20px",  // Redondear solo la esquina inferior derecha
             },
           }}
         >
@@ -75,6 +78,9 @@ const Sidebar = ({
         sx: {
           width: sidebarWidth,
           boxShadow: (theme) => theme.shadows[8],
+          backgroundColor: "#e0e7ff", // Color de fondo para móviles
+          borderTopRightRadius: "16px",  // Redondear solo la esquina superior derecha
+          borderBottomRightRadius: "16px",  // Redondear solo la esquina inferior derecha
         },
       }}
     >

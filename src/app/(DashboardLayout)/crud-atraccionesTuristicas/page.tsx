@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Typography, Grid, Card, CardContent, Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from '@mui/material';
+import {Search as SearchIcon } from '@mui/icons-material';
 import Carousel from 'react-material-ui-carousel';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
@@ -109,7 +110,7 @@ const Municipalidad: React.FC = () => {
     };
 
     return (
-        <PageContainer title="Atracciones Turísticas" description="Una página para gestionar atracciones turísticas">
+        <PageContainer title="Atracciones" description="Una página para gestionar atracciones turísticas">
             <DashboardCard>
                 <Box>
                     <Box textAlign="center" mb={4}>
@@ -126,7 +127,13 @@ const Municipalidad: React.FC = () => {
                         margin="dense"
                         onChange={handleSearch}
                         value={searchQuery}
-                        sx={{ mb: 4 }}
+                        sx={{ 
+                            mb: 4,
+                            maxWidth: 400
+                         }}
+                        InputProps={{
+                            endAdornment: <SearchIcon />,
+                        }}
                     />
                     <Grid container spacing={4} justifyContent="center">
                         {filteredAttractions.map((attraction) => (
