@@ -5,25 +5,13 @@ import { Grid, Box, Card, Stack, Typography } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "@/app/(DashboardLayout)/layout/shared/logo/Logo";
 import AuthLogin from "../auth/AuthLogin";
+// Importa el archivo CSS
+import '../login/Login.css'; // Asegúrate de que la ruta sea correcta
 
-const Login2 = () => {
+function Login2() {
   return (
     <PageContainer title="Login" description="this is Login page">
-      <Box
-        sx={{
-          position: "relative",
-          "&:before": {
-            content: '""',
-            background: "radial-gradient(#d2f1df, #d3d7fa, #bad8f4)",
-            backgroundSize: "400% 400%",
-            animation: "gradient 15s ease infinite",
-            position: "absolute",
-            height: "100%",
-            width: "100%",
-            opacity: "0.3",
-          },
-        }}
-      >
+      <Box className="container">
         <Grid
           container
           spacing={0}
@@ -42,22 +30,18 @@ const Login2 = () => {
           >
             <Card
               elevation={9}
-              sx={{ p: 4, zIndex: 1, width: "100%", maxWidth: "500px" }}
+              sx={{
+                p: 4,
+                zIndex: 1,
+                backgroundColor: "#ffffffd6",
+                width: "100%",
+                maxWidth: "500px"
+              }}
             >
               <Box display="flex" alignItems="center" justifyContent="center">
                 <Logo />
               </Box>
               <AuthLogin
-                subtext={
-                  <Typography
-                    variant="subtitle1"
-                    textAlign="center"
-                    color="textSecondary"
-                    mb={1}
-                  >
-                    Your Social Campaigns
-                  </Typography>
-                }
                 subtitle={
                   <Stack
                     direction="row"
@@ -65,24 +49,7 @@ const Login2 = () => {
                     justifyContent="center"
                     mt={3}
                   >
-                    <Typography
-                      color="textSecondary"
-                      variant="h6"
-                      fontWeight="500"
-                    >
-                      New to Modernize?
-                    </Typography>
-                    <Typography
-                      component={Link}
-                      href="/authentication/register"
-                      fontWeight="500"
-                      sx={{
-                        textDecoration: "none",
-                        color: "primary.main",
-                      }}
-                    >
-                      Create an account
-                    </Typography>
+                    {/* Puedes agregar contenido aquí si es necesario */}
                   </Stack>
                 }
               />
@@ -92,5 +59,6 @@ const Login2 = () => {
       </Box>
     </PageContainer>
   );
-};
+}
+
 export default Login2;
