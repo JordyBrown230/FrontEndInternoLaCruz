@@ -8,7 +8,7 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { toast, Toaster } from 'react-hot-toast'; // Importar react-hot-toast
+import { toast, Toaster } from 'react-hot-toast';
 
 // Interfaz de la información de transporte
 interface TransportInfo {
