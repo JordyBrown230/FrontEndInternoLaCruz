@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Typography, Grid, Card, CardContent, Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Select, InputLabel, FormControl, Link } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, DirectionsBus as BusIcon, CarRental as CarIcon, DirectionsBike as BikeIcon, LocationOn as LocationIcon, Launch as LaunchIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, DirectionsBus as BusIcon, CarRental as CarIcon, DirectionsBike as BikeIcon, LocationOn as LocationIcon, Launch as LaunchIcon, Search as SearchIcon, LocationOn } from '@mui/icons-material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import AOS from 'aos';
@@ -17,6 +17,8 @@ interface TransportInfo {
     description: string;
     type: string; // Transporte público, alquiler de vehículos, etc.
     website?: string; // Sitio web opcional
+    phone?: string; // Número de teléfono opcional
+    images: string[]; // Array de imágenes
 }
 
 // Validación con Yup
@@ -25,6 +27,7 @@ const validationSchema = Yup.object({
     description: Yup.string().required('Descripción es obligatoria'),
     type: Yup.string().required('Tipo es obligatorio'),
     website: Yup.string().url('URL inválida').notRequired(), // Validación opcional para el sitio web
+    phone: Yup.string().nullable(), // Validación opcional para el teléfono
 });
 
 // Iconos para los tipos de transporte
@@ -32,7 +35,7 @@ const transportIcons: Record<string, React.ReactNode> = {
     "Transporte Público": <BusIcon />,
     "Alquiler de Vehículos": <CarIcon />,
     "Bicicletas": <BikeIcon />,
-    "Cómo Llegar": <LocationIcon />,
+    "Cómo Llegar": <LocationOn />,
 };
 
 const Municipalidad = () => {
@@ -67,7 +70,7 @@ const Municipalidad = () => {
             toast.success('Información actualizada con éxito'); // Notificación de éxito
         } else {
             // Agregar nueva información
-            updatedInfos = [...transportInfos, { id: Date.now(), ...values }] as TransportInfo[];
+            updatedInfos = [...transportInfos, { id: Date.now(), ...values, images: [] }] as TransportInfo[];
             toast.success('Información agregada con éxito'); // Notificación de éxito
         }
         setTransportInfos(updatedInfos);
@@ -115,22 +118,21 @@ const Municipalidad = () => {
                     </Box>
 
                     {/* Campo de búsqueda */}
-                   
-                        <TextField
-                            label="Buscar por tipo de transporte"
-                            variant="outlined"
-                            value={searchQuery}
-                            onChange={handleSearchChange}
-                            InputProps={{
-                                endAdornment: <SearchIcon />,
-                            }}
-                            fullWidth
-                            sx={{ 
-                                mb: 4,
-                                maxWidth: 400
-                             }}
-                        />
-        
+                    <TextField
+                        label="Buscar por tipo de transporte"
+                        variant="outlined"
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        InputProps={{
+                            endAdornment: <SearchIcon />,
+                        }}
+                        fullWidth
+                        sx={{ 
+                            mb: 4,
+                            maxWidth: 400
+                         }}
+                    />
+
                     <Grid container spacing={4} justifyContent="center">
                         {filteredTransportInfos.map((info) => (
                             <Grid item xs={12} md={6} key={info.id} data-aos="fade-up">
@@ -148,6 +150,18 @@ const Municipalidad = () => {
                                                 {info.type}
                                             </Typography>
                                         </Box>
+                                        {info.phone && (
+                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                                Teléfono: {info.phone}
+                                            </Typography>
+                                        )}
+                                        {info.images.length > 0 && (
+                                            <Box mt={2}>
+                                                {info.images.map((image, index) => (
+                                                    <img key={index} src={image} alt={`Imagen ${index + 1}`} style={{ width: '100%', height: 'auto', borderRadius: '4px', marginBottom: '8px' }} />
+                                                ))}
+                                            </Box>
+                                        )}
                                         {info.website && (
                                             <Box mt={2}>
                                                 <Button
@@ -187,11 +201,15 @@ const Municipalidad = () => {
                         description: currentInfo ? currentInfo.description : '',
                         type: currentInfo ? currentInfo.type : '',
                         website: currentInfo ? currentInfo.website : '',
+                        phone: currentInfo ? currentInfo.phone : '', 
+                        images: currentInfo ? currentInfo.images : [],
                     }}
                     validationSchema={validationSchema}
-                    onSubmit={handleSave}
+                    onSubmit={(values) => {
+                        handleSave(values);
+                    }}
                 >
-                    {({ values }) => (
+                    {({ setFieldValue, values }) => (
                         <Form>
                             <DialogContent>
                                 <Field name="title">
@@ -250,6 +268,67 @@ const Municipalidad = () => {
                                         />
                                     )}
                                 </Field>
+                                <Field name="phone">
+                                    {({ field, meta }: any) => (
+                                        <TextField
+                                            {...field}
+                                            label="Número de Teléfono (Opcional)"
+                                            fullWidth
+                                            margin="dense"
+                                            variant="standard"
+                                            error={meta.touched && Boolean(meta.error)}
+                                            helperText={meta.touched && meta.error}
+                                        />
+                                    )}
+                                </Field>
+                                <input
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    id="upload-images"
+                                    type="file"
+                                    multiple
+                                    onChange={(e) => {
+                                        const files = e.target.files;
+                                        if (files && files.length > 0) {
+                                            const newImages = Array.from(files).map(file => {
+                                                const reader = new FileReader();
+                                                reader.readAsDataURL(file);
+                                                return new Promise<string>((resolve) => {
+                                                    reader.onloadend = () => {
+                                                        resolve(reader.result as string);
+                                                    };
+                                                });
+                                            });
+
+                                            Promise.all(newImages).then(images => {
+                                                setFieldValue('images', [...values.images, ...images].slice(0, 5));
+                                            });
+                                        }
+                                    }}
+                                />
+                                <label htmlFor="upload-images">
+                                    <Button variant="contained" component="span" sx={{ mt: 2 }}>
+                                        Subir Logo de Empresa
+                                    </Button>
+                                </label>
+                                {values.images.length > 0 && (
+                                    <Box mt={2}>
+                                        {values.images.map((image, index) => (
+                                            <Box key={index} display="inline-block" position="relative" mr={1}>
+                                                <img src={image} alt={`Previsualización ${index + 1}`} style={{ width: '100px', height: '100px', marginRight: '8px' }} />
+                                                <IconButton
+                                                    onClick={() => {
+                                                        const updatedImages = values.images.filter((_, i) => i !== index);
+                                                        setFieldValue('images', updatedImages);
+                                                    }}
+                                                    sx={{ position: 'absolute', top: 0, right: 0 }}
+                                                >
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                )}
                             </DialogContent>
                             <DialogActions>
                                 <Button onClick={handleCloseDialog}>Cancelar</Button>
