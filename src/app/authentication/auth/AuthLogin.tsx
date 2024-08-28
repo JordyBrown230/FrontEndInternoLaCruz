@@ -1,4 +1,6 @@
 import React from "react";
+import {fetchData} from "../fetchDataLogin.js";
+
 import {
   Box,
   Typography,
@@ -17,6 +19,13 @@ interface loginType {
   subtitle?: JSX.Element | JSX.Element[];
   subtext?: JSX.Element | JSX.Element[];
 }
+
+const data = {
+  username: (document.getElementById('username') as HTMLInputElement).value,
+  password: (document.getElementById('password') as HTMLInputElement).value,
+}
+
+const apiData = fetchData('http://localhost:9000/sit/login', data);
 
 const AuthLogin = ({ title, subtitle, subtext }: loginType) => (
   <>
