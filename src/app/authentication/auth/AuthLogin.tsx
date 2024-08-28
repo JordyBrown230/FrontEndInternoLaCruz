@@ -1,4 +1,5 @@
 import React from "react";
+import "../login/Login.css"
 import {
   Box,
   Typography,
@@ -35,11 +36,13 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => (
           fontWeight={600}
           component="label"
           htmlFor="username"
-          mb="5px"
+          mb="8px"
         >
           Nombre de Usuario:
         </Typography>
-        <CustomTextField variant="outlined" fullWidth />
+        <br />
+        <br />
+        <input className="input"/>
       </Box>
       <Box mt="25px">
         <Typography
@@ -50,9 +53,10 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => (
           mb="5px"
         >
           Contraseña:
-          
         </Typography>
-        <CustomTextField type="password" variant="outlined" fullWidth />
+        <br />
+        <br />
+        <input className="input" type="password"/>
       </Box>
       <Stack
         justifyContent="space-between"
