@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Typography, Grid, Card, CardContent, Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from '@mui/material';
-import {Search as SearchIcon } from '@mui/icons-material';
+import { Search as SearchIcon } from '@mui/icons-material';
 import Carousel from 'react-material-ui-carousel';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
@@ -25,6 +25,7 @@ interface Attraction {
     status: string;
     website: string;
     opening_hours: string;
+    phone?: string; // Nuevo campo para el número de teléfono
 }
 
 // Validación con Yup
@@ -37,6 +38,7 @@ const validationSchema = Yup.object({
     lng: Yup.number().required('Longitud es obligatoria').min(-180).max(180),
     opening_hours: Yup.string().required('Horario de apertura es obligatorio'),
     website: Yup.string().url('Debe ser una URL válida').nullable(),
+    phone: Yup.string().nullable(), // Validación para el número de teléfono
     status: Yup.string().nullable()
 });
 
@@ -163,6 +165,11 @@ const Municipalidad: React.FC = () => {
                                         <Typography variant="body2" color="text.secondary">
                                             Estado: {attraction.status}
                                         </Typography>
+                                        {attraction.phone && (
+                                            <Typography variant="body2" color="text.secondary">
+                                                Teléfono: {attraction.phone}
+                                            </Typography>
+                                        )}
                                         {attraction.website && (
                                             <Button
                                                 variant="contained"
@@ -194,6 +201,14 @@ const Municipalidad: React.FC = () => {
                                             >
                                                 Ver en Waze
                                             </Button>
+                                            <Button
+                                                variant="outlined"
+                                                color="success"
+                                                href={`tel:${attraction.phone}`} // Botón para llamar
+                                                target="_blank"
+                                            >
+                                                Llamar
+                                            </Button>
                                             <IconButton onClick={() => handleClickOpen(attraction)} aria-label="edit">
                                                 <EditIcon />
                                             </IconButton>
@@ -222,6 +237,7 @@ const Municipalidad: React.FC = () => {
                         lng: currentAttraction ? currentAttraction.lng : 0,
                         opening_hours: currentAttraction ? currentAttraction.opening_hours : '',
                         website: currentAttraction ? currentAttraction.website : '',
+                        phone: currentAttraction ? currentAttraction.phone : '', // Inicializa el número de teléfono
                         status: currentAttraction ? currentAttraction.status : '',
                         images: currentAttraction ? currentAttraction.images : []
                     }}
@@ -371,6 +387,20 @@ const Municipalidad: React.FC = () => {
                                                 </Button>
                                             )}
                                         </div>
+                                    )}
+                                </Field>
+                                <Field name="phone">
+                                    {({ field, meta }: any) => (
+                                        <TextField
+                                            {...field}
+                                            label="Número de Teléfono"
+                                            fullWidth
+                                            margin="dense"
+                                            variant="standard"
+                                            error={meta.touched && Boolean(meta.error)}
+                                            helperText={meta.touched && meta.error}
+                                            sx={{ '& .MuiInputBase-input': { '&:hover': { color: 'blue' } } }}
+                                        />
                                     )}
                                 </Field>
                                 <input

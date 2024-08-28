@@ -59,7 +59,7 @@
 	left: 50%;
 	width: 150%;
 	height: 300%;
-	background: linear-gradient(135deg, #6692bb, #43a062, #2bbfff);
+	background: linear-gradient(135deg, #6692bb, #43a062, #065f85);
 	z-index: -1;
 	transform: translate(-50%, -50%) scale(0);
 	transition: transform 0.5s ease;
@@ -82,7 +82,7 @@
 	border-radius: 25px;
 	outline: none;
 	border: none;
-	background-image: linear-gradient(to right, #32be8f, #0032d6, #32be8f);
+	background-image: linear-gradient(to right, #32be8f, #3b5ed1, #32be8f);
 	background-size: 200%;
 	font-size: 1.2rem;
 	color: #fff;
