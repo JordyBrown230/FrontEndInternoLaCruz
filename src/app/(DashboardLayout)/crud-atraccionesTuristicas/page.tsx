@@ -11,6 +11,8 @@ import { Delete as DeleteIcon, Edit as EditIcon, Directions as DirectionsIcon } 
 import toast, { Toaster } from 'react-hot-toast';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Interfaz de la atracción
 interface Attraction {
@@ -25,7 +27,7 @@ interface Attraction {
     status: string;
     website: string;
     opening_hours: string;
-    phone?: string; // Nuevo campo para el número de teléfono
+    phone?: string;
 }
 
 // Validación con Yup
@@ -42,7 +44,11 @@ const validationSchema = Yup.object({
     status: Yup.string().nullable()
 });
 
-const Municipalidad: React.FC = () => {
+interface Props {
+    attraction: Attraction;
+}
+
+const Municipalidad: React.FC<Props> = ({ attraction }) => {
     useEffect(() => {
         AOS.init();
     }, []);
@@ -111,6 +117,143 @@ const Municipalidad: React.FC = () => {
         setFilteredAttractions(filtered);
     };
 
+
+    const generatePDF = (attraction: Attraction) => {
+        const doc = new jsPDF();
+        const imageWidth = 80; // Ancho de cada imagen
+        const imageHeight = 60; // Alto de cada imagen
+        const margin = 10; // Espacio entre imágenes
+        const imagesPerRow = 2; // Número de imágenes por fila
+        const xOffset = 10; // Margen desde el borde izquierdo
+        const yOffset = 140; // Posición vertical inicial para imágenes
+        const borderRadius = 10; // Radio de los bordes redondeados de las imágenes
+    
+        // Colores
+        const primaryColor: [number, number, number] = [0, 207, 193]; // Verde Agua (#00CFC1)
+        const RedColor: [number, number, number] = [247, 247, 247]; // Gris claro (#F7F7F7)
+        const secondaryColor: [number, number, number] = [162, 223, 247]; // Celeste (#A2DFF7)
+        const buttonTextColor: [number, number, number] = [0, 0, 0]; // Negro (#000000)
+        const textColor: [number, number, number] = [51, 51, 51]; // Gris oscuro (#333333)
+        const borderColor: [number, number, number] = [0, 0, 0]; // Color del borde de las imágenes (Negro)
+    
+        // Iconos (asume que tienes URLs o rutas a estos iconos)
+        const websiteIconUrl = 'https://cdn-icons-png.flaticon.com/256/8344/8344996.png';
+        const googleMapsIconUrl = 'https://cdn-icons-png.flaticon.com/256/2642/2642502.png';
+        const wazeIconUrl = 'https://cdn-icons-png.flaticon.com/256/3771/3771526.png';
+    
+        const iconSize = 8; // Tamaño de los iconos
+        const buttonWidth = 55; // Ancho de cada botón
+        const buttonHeight = 12; // Alto de cada botón
+    
+        // Agregar título en verde agua
+        doc.setFontSize(24);
+        doc.setFont("Helvetica", "bold");
+        doc.setTextColor(...primaryColor);
+        doc.text(attraction.title, 105, 20, { align: 'center' });
+    
+        // Línea divisoria en celeste
+        doc.setLineWidth(1);
+        doc.setDrawColor(...secondaryColor);
+        doc.line(10, 25, 200, 25);
+    
+        // Agregar descripción en gris oscuro
+        doc.setTextColor(...textColor);
+        doc.setFontSize(14);
+        doc.setFont("Helvetica", "normal");
+        const descriptionLines = doc.splitTextToSize(attraction.description, 190);
+        const descriptionHeight = descriptionLines.length * 10; // Altura estimada del texto (10px por línea)
+        doc.text(descriptionLines, 10, 35, { maxWidth: 190 });
+    
+        // Ajustar posición vertical después de la descripción
+        let currentY = 35 + descriptionHeight + 10; // +10px de margen
+    
+        // Sección de detalles en verde agua
+        doc.setTextColor(...primaryColor);
+        doc.setFontSize(12);
+        doc.text(`Ubicación: ${attraction.location}`, 10, currentY);
+        currentY += 10; // Aumentar posición vertical
+        doc.text(`Horario: ${attraction.opening_hours}`, 10, currentY);
+        currentY += 10; // Aumentar posición vertical
+        doc.text(`Estado: ${attraction.status}`, 10, currentY);
+        currentY += 10; // Aumentar posición vertical
+    
+        // Teléfono en verde agua si está disponible
+        if (attraction.phone) {
+            doc.text(`Teléfono: ${attraction.phone}`, 10, currentY);
+            currentY += 10; // Aumentar posición vertical
+        }
+    
+        // Función para dibujar botones con icono
+        const drawButtonWithIcon = (text: string, url: string, iconUrl: string, x: number, y: number) => {
+            // Fondo del botón (gris claro)
+            doc.setFillColor(...RedColor);
+            doc.roundedRect(x, y, buttonWidth, buttonHeight, 5, 5, 'F'); // Bordes redondeados
+    
+            // Añadir icono
+            doc.addImage(iconUrl, 'PNG', x + 5, y + 2, iconSize, iconSize); // Ajustar posición del icono
+    
+            // Hacer el texto clicable y visible
+            doc.setFontSize(10);
+            doc.setTextColor(...buttonTextColor);
+            doc.textWithLink(text, x + iconSize + 8, y + buttonHeight / 2 + 2, { align: 'left', url });
+        };
+    
+        // Añadir botones horizontalmente
+        const buttonSpacing = buttonWidth + 10; // Espacio entre los botones
+        let buttonXPosition = 10; // Posición horizontal inicial de los botones
+        const buttonYPosition = currentY; // Posición vertical para los botones
+    
+        // Botón con icono para el sitio web
+        drawButtonWithIcon('Visitar Sitio Web', attraction.website, websiteIconUrl, buttonXPosition, buttonYPosition);
+    
+        // Botón con icono para Google Maps
+        buttonXPosition += buttonSpacing; // Mover a la derecha para el siguiente botón
+        drawButtonWithIcon('Ver en Google Maps', `https://www.google.com/maps?q=${attraction.lat},${attraction.lng}`, googleMapsIconUrl, buttonXPosition, buttonYPosition);
+    
+        // Botón con icono para Waze
+        buttonXPosition += buttonSpacing; // Mover a la derecha para el siguiente botón
+        drawButtonWithIcon('Ver en Waze', `https://www.waze.com/ul?ll=${attraction.lat},${attraction.lng}&navigate=yes`, wazeIconUrl, buttonXPosition, buttonYPosition);
+    
+        // Ajustar la posición vertical para las imágenes
+        let xPosition = xOffset;
+        let yPosition = buttonYPosition + buttonHeight + 10; // Aumentar posición vertical después de los botones
+    
+        // Agregar imágenes con bordes redondeados y sombra
+        attraction.images.forEach((imageUrl, index) => {
+            if (index % imagesPerRow === 0 && index !== 0) {
+                xPosition = xOffset;
+                yPosition += imageHeight + margin; // Mover a la siguiente fila
+            }
+    
+            // Verificar si la imagen se sale de la página
+            if (yPosition + imageHeight > doc.internal.pageSize.height - 20) {
+                // Añadir una nueva página
+                doc.addPage();
+                yPosition = 20; // Reiniciar posición vertical en la nueva página
+            }
+    
+            // Añadir sombra
+            doc.setFillColor(229, 229, 229); // Color de sombra (gris claro)
+            doc.rect(xPosition + 2, yPosition + 2, imageWidth, imageHeight, 'F'); // Crear un rectángulo gris para sombra
+            doc.setFillColor(...secondaryColor); // Color del fondo del rectángulo (celeste)
+            doc.rect(xPosition, yPosition, imageWidth, imageHeight, 'F'); // Crear un rectángulo celeste para el fondo de la imagen
+    
+            // Añadir imagen con borde redondeado
+            doc.addImage(imageUrl, 'JPEG', xPosition, yPosition, imageWidth, imageHeight);
+    
+            xPosition += imageWidth + margin; // Mover a la siguiente columna
+        });
+    
+        // Pie de página en celeste
+        doc.setTextColor(...secondaryColor);
+        doc.setFontSize(10);
+        doc.text('Generado por Sistema de Información Turística', 105, doc.internal.pageSize.height - 10, { align: 'center' });
+    
+        // Guardar el PDF
+        doc.save('attraction.pdf');
+    };
+    
+    
     return (
         <PageContainer title="Atracciones" description="Una página para gestionar atracciones turísticas">
             <DashboardCard>
@@ -129,10 +272,7 @@ const Municipalidad: React.FC = () => {
                         margin="dense"
                         onChange={handleSearch}
                         value={searchQuery}
-                        sx={{ 
-                            mb: 4,
-                            maxWidth: 400
-                         }}
+                        sx={{ mb: 4, maxWidth: 400 }}
                         InputProps={{
                             endAdornment: <SearchIcon />,
                         }}
@@ -140,7 +280,7 @@ const Municipalidad: React.FC = () => {
                     <Grid container spacing={4} justifyContent="center">
                         {filteredAttractions.map((attraction) => (
                             <Grid item xs={12} md={6} key={attraction.id} data-aos="fade-up">
-                                <Card>
+                                <Card id={`attraction-${attraction.id}`}>
                                     <Carousel>
                                         {attraction.images.map((image, index) => (
                                             <img key={index} src={image} alt={`Imagen ${index + 1}`} height="300" width="100%" />
@@ -152,7 +292,7 @@ const Municipalidad: React.FC = () => {
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
                                             {attraction.description}
-                                        </Typography>
+                                        </Typography>                 
                                         <Typography variant="body2" color="text.secondary">
                                             Tipo: {attraction.type_attraction}
                                         </Typography>
@@ -201,21 +341,34 @@ const Municipalidad: React.FC = () => {
                                             >
                                                 Ver en Waze
                                             </Button>
-                                            <Button
-                                                variant="outlined"
-                                                color="success"
-                                                href={`tel:${attraction.phone}`} // Botón para llamar
-                                                target="_blank"
+                                            {attraction.phone && (
+                                                <Button
+                                                    variant="outlined"
+                                                    color="success"
+                                                    href={`tel:${attraction.phone}`}
+                                                    target="_blank"
+                                                >
+                                                    Llamar
+                                                </Button>
+                                            )}
+                                        </Box>
+                                        <br />
+                                        <Button
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={() => generatePDF(attraction)}
+                                                
                                             >
-                                                Llamar
-                                            </Button>
-                                            <IconButton onClick={() => handleClickOpen(attraction)} aria-label="edit">
+                                                Descargar Folleto
+                                        </Button>
+                                        <br />
+                                        <br />
+                                        <IconButton onClick={() => handleClickOpen(attraction)} aria-label="edit">
                                                 <EditIcon />
                                             </IconButton>
                                             <IconButton onClick={() => handleDeleteConfirmation(attraction)} aria-label="delete">
                                                 <DeleteIcon />
                                             </IconButton>
-                                        </Box>
                                     </CardContent>
                                 </Card>
                             </Grid>
@@ -237,7 +390,7 @@ const Municipalidad: React.FC = () => {
                         lng: currentAttraction ? currentAttraction.lng : 0,
                         opening_hours: currentAttraction ? currentAttraction.opening_hours : '',
                         website: currentAttraction ? currentAttraction.website : '',
-                        phone: currentAttraction ? currentAttraction.phone : '', // Inicializa el número de teléfono
+                        phone: currentAttraction ? currentAttraction.phone : '',
                         status: currentAttraction ? currentAttraction.status : '',
                         images: currentAttraction ? currentAttraction.images : []
                     }}
@@ -477,6 +630,7 @@ const Municipalidad: React.FC = () => {
             <Toaster />
         </PageContainer>
     );
+
 };
 
 export default Municipalidad;
