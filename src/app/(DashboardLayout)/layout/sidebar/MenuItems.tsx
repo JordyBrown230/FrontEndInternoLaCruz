@@ -1,8 +1,12 @@
+import { IconAccessibleOff, IconAccessibleOffFilled, IconPrescription, IconUserBolt, IconUserEdit } from "@tabler/icons-react";
 import {
   IconHome,
   IconBuilding,
   IconMap,
   IconBus,
+  IconVideo,
+  IconForms,
+  IconAccessible,
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -29,6 +33,24 @@ const Menuitems = [
     title: "Transportes",
     icon: IconBus,
     href: "/crud-transportes",
+  },
+  {
+    id: uniqueId(),
+    title: "Multimedia",
+    icon: IconVideo,
+    href: "/crud-materiaMulti",
+  },
+  {
+    id: uniqueId(),
+    title: "Información Legal-Regulatoria",
+    icon: IconForms,
+    href: "/crud-InfoLegalRegulatoria",
+  },
+  {
+    id: uniqueId(),
+    title: "Educación Turística",
+    icon: IconUserEdit,
+    href: "/crud-EducacionTuristica",
   },
 ];
 
