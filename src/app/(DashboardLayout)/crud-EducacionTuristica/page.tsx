@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Typography, Grid, Card, CardContent, Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Select, InputLabel, FormControl, Link } from '@mui/material';
+import { Typography, Grid, Card, CardContent, Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Select, InputLabel, FormControl, Link, List, ListItem, ListItemText } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Launch as LaunchIcon, Search as SearchIcon } from '@mui/icons-material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
@@ -9,6 +9,8 @@ import 'aos/dist/aos.css';
 import { Formik, Form, Field, FieldArray } from 'formik';
 import * as Yup from 'yup';
 import { toast, Toaster } from 'react-hot-toast';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css'; // Importa los estilos de Quill
 
 // Interfaz para los recursos educativos
 interface EducationalResource {
@@ -17,9 +19,7 @@ interface EducationalResource {
     description: string;
     link?: string;
     category: string;
-    format: string;
     publicationDate: string;
-    difficulty: string;
     authors: string[];
 }
 
@@ -29,9 +29,7 @@ const validationSchema = Yup.object({
     description: Yup.string().required('Descripción es obligatoria'),
     link: Yup.string().url('URL inválida').notRequired(),
     category: Yup.string().required('Categoría es obligatoria'),
-    format: Yup.string().required('Formato es obligatorio'),
     publicationDate: Yup.date().required('Fecha de publicación es obligatoria').nullable(),
-    difficulty: Yup.string().required('Nivel de dificultad es obligatorio'),
     authors: Yup.array().of(Yup.string().required('Nombre del autor es obligatorio')).min(1, 'Debe haber al menos un autor'),
 });
 
@@ -132,8 +130,25 @@ const EducationTourism = () => {
                                             {resource.title}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
-                                            {resource.description}
+                                            {/* Renderizamos el contenido de la descripción como HTML */}
+                                            <div dangerouslySetInnerHTML={{ __html: resource.description }} />
                                         </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                                            <strong>Categoría:</strong> {resource.category}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                            <strong>Fecha de Publicación:</strong> {resource.publicationDate}
+                                        </Typography>
+                                        <List dense>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                                                <strong>Autores:</strong>
+                                            </Typography>
+                                            {resource.authors.map((author, index) => (
+                                                <ListItem key={index}>
+                                                    <ListItemText primary={author} />
+                                                </ListItem>
+                                            ))}
+                                        </List>
                                         {resource.link && (
                                             <Box mt={2}>
                                                 <Button
@@ -172,9 +187,7 @@ const EducationTourism = () => {
                         description: currentResource ? currentResource.description : '',
                         link: currentResource ? currentResource.link : '',
                         category: currentResource ? currentResource.category : '',
-                        format: currentResource ? currentResource.format : '',
                         publicationDate: currentResource ? currentResource.publicationDate : '',
-                        difficulty: currentResource ? currentResource.difficulty : '',
                         authors: currentResource ? currentResource.authors : [''],
                     }}
                     validationSchema={validationSchema}
@@ -198,79 +211,61 @@ const EducationTourism = () => {
                                         />
                                     )}
                                 </Field>
+                                
+                                {/* Editor de texto enriquecido para la descripción */}
                                 <Field name="description">
-                                    {({ field, meta }: any) => (
-                                        <TextField
-                                            {...field}
-                                            label="Descripción"
-                                            fullWidth
-                                            margin="dense"
-                                            variant="standard"
-                                            error={meta.touched && Boolean(meta.error)}
-                                            helperText={meta.touched && meta.error}
-                                        />
+                                    {({ field }: any) => (
+                                        <div style={{ margin: '16px 0' }}>
+                                            <ReactQuill
+                                                theme="snow"
+                                                value={field.value}
+                                                onChange={(content) => setFieldValue('description', content)}
+                                                placeholder="Escribe la descripción del recurso..."
+                                                modules={{
+                                                    toolbar: [
+                                                        [{ 'header': [1, 2, false] }],
+                                                        ['bold', 'italic', 'underline', 'strike'],
+                                                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                                        [{ 'align': [] }],
+                                                        ['link'],
+                                                        ['clean'],
+                                                    ],
+                                                }}
+                                            />
+                                        </div>
                                     )}
                                 </Field>
-                                <Field name="link">
-                                    {({ field, meta }: any) => (
-                                        <TextField
-                                            {...field}
-                                            label="Enlace (Opcional)"
-                                            fullWidth
-                                            margin="dense"
-                                            variant="standard"
-                                            error={meta.touched && Boolean(meta.error)}
-                                            helperText={meta.touched && meta.error}
-                                        />
-                                    )}
-                                </Field>
-                                <FormControl fullWidth margin="dense" variant="standard">
-                                    <InputLabel>Categoria</InputLabel>
-                                    <Field name="category" as={Select}>
+                                
+                                <FormControl fullWidth margin="dense">
+                                    <InputLabel>Categoría</InputLabel>
+                                    <Field name="category" as={Select} fullWidth variant="standard">
                                         <MenuItem value="Manual">Manual</MenuItem>
                                         <MenuItem value="Guía">Guía</MenuItem>
                                         <MenuItem value="Artículo">Artículo</MenuItem>
-                                        {/* Agregar más categorías si es necesario */}
-                                    </Field>
-                                </FormControl>
-                                <FormControl fullWidth margin="dense" variant="standard">
-                                    <InputLabel>Formato</InputLabel>
-                                    <Field name="format" as={Select}>
-                                        <MenuItem value="PDF">PDF</MenuItem>
-                                        <MenuItem value="Video">Video</MenuItem>
-                                        <MenuItem value="Infografía">Infografía</MenuItem>
-                                        {/* Agregar más formatos si es necesario */}
                                     </Field>
                                 </FormControl>
                                 <Field name="publicationDate">
                                     {({ field, meta }: any) => (
                                         <TextField
                                             {...field}
+                                            label="Fecha de publicación"
                                             type="date"
-                                            label="Fecha de Publicación"
                                             fullWidth
                                             margin="dense"
+                                            InputLabelProps={{
+                                                shrink: true,
+                                            }}
                                             variant="standard"
-                                            InputLabelProps={{ shrink: true }}
                                             error={meta.touched && Boolean(meta.error)}
                                             helperText={meta.touched && meta.error}
                                         />
                                     )}
                                 </Field>
-                                <FormControl fullWidth margin="dense" variant="standard">
-                                    <InputLabel>Nivel de Dificultad</InputLabel>
-                                    <Field name="difficulty" as={Select}>
-                                        <MenuItem value="Principiante">Principiante</MenuItem>
-                                        <MenuItem value="Intermedio">Intermedio</MenuItem>
-                                        <MenuItem value="Avanzado">Avanzado</MenuItem>
-                                        {/* Agregar más niveles si es necesario */}
-                                    </Field>
-                                </FormControl>
                                 <FieldArray name="authors">
-                                    {({ remove, push }: any) => (
+                                    {({ push, remove, form }) => (
                                         <>
-                                            {values.authors.map((author: string, index: number) => (
-                                                <Field name={`authors[${index}]`} key={index}>
+                                            {form.values.authors.map((_: string, index: number) => (
+                                                <Field key={index} name={`authors[${index}]`}>
                                                     {({ field, meta }: any) => (
                                                         <TextField
                                                             {...field}
@@ -282,10 +277,7 @@ const EducationTourism = () => {
                                                             helperText={meta.touched && meta.error}
                                                             InputProps={{
                                                                 endAdornment: (
-                                                                    <IconButton
-                                                                        onClick={() => remove(index)}
-                                                                        aria-label="delete"
-                                                                    >
+                                                                    <IconButton onClick={() => remove(index)}>
                                                                         <DeleteIcon />
                                                                     </IconButton>
                                                                 ),
@@ -295,20 +287,25 @@ const EducationTourism = () => {
                                                 </Field>
                                             ))}
                                             <Button
-                                                type="button"
                                                 onClick={() => push('')}
                                                 variant="outlined"
-                                                sx={{ mt: 2 }}
+                                                color="primary"
+                                                startIcon={<AddIcon />}
+                                                fullWidth
                                             >
-                                                Agregar Autor
+                                                Agregar otro autor
                                             </Button>
                                         </>
                                     )}
                                 </FieldArray>
                             </DialogContent>
                             <DialogActions>
-                                <Button onClick={handleCloseDialog}>Cancelar</Button>
-                                <Button type="submit">Guardar</Button>
+                                <Button onClick={handleCloseDialog} color="primary">
+                                    Cancelar
+                                </Button>
+                                <Button type="submit" color="primary" variant="contained">
+                                    Guardar
+                                </Button>
                             </DialogActions>
                         </Form>
                     )}
@@ -316,13 +313,17 @@ const EducationTourism = () => {
             </Dialog>
 
             <Dialog open={openDeleteDialog} onClose={handleCloseDialog}>
-                <DialogTitle>Confirmar Eliminación</DialogTitle>
+                <DialogTitle>Confirmar eliminación</DialogTitle>
                 <DialogContent>
-                    <Typography>¿Estás seguro de que deseas eliminar el recurso "{currentResource?.title}"?</Typography>
+                    <Typography>¿Estás seguro de que deseas eliminar este recurso?</Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseDialog}>Cancelar</Button>
-                    <Button onClick={handleDelete} color="error">Eliminar</Button>
+                    <Button onClick={handleCloseDialog} color="primary">
+                        Cancelar
+                    </Button>
+                    <Button onClick={handleDelete} color="secondary" variant="contained">
+                        Eliminar
+                    </Button>
                 </DialogActions>
             </Dialog>
         </PageContainer>

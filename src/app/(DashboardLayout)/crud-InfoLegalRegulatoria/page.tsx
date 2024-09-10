@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Typography, Grid, Card, CardContent, Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Select, InputLabel, FormControl, Link } from '@mui/material';
+import { Typography, Grid, Card, CardContent, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, TextField, Link } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Launch as LaunchIcon, Search as SearchIcon } from '@mui/icons-material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
@@ -9,6 +9,8 @@ import 'aos/dist/aos.css';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { toast, Toaster } from 'react-hot-toast';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css'; // Importa el estilo de Quill
 
 // Interfaz de la información legal y regulatoria
 interface LegalInfo {
@@ -128,9 +130,11 @@ const Municipalidad = () => {
                                         <Typography gutterBottom variant="h5" component="div">
                                             {info.title}
                                         </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            {info.description}
-                                        </Typography>
+                                        <Box
+                                            component="div"
+                                            dangerouslySetInnerHTML={{ __html: info.description }}
+                                            sx={{ whiteSpace: 'pre-wrap' }} // Mantiene los saltos de línea y el formato
+                                        />
                                         {info.website && (
                                             <Box mt={2}>
                                                 <Button
@@ -175,7 +179,7 @@ const Municipalidad = () => {
                         handleSave(values);
                     }}
                 >
-                    {({ values }) => (
+                    {({ values, setFieldValue }) => (
                         <Form>
                             <DialogContent>
                                 <Field name="title">
@@ -191,19 +195,14 @@ const Municipalidad = () => {
                                         />
                                     )}
                                 </Field>
-                                <Field name="description">
-                                    {({ field, meta }: any) => (
-                                        <TextField
-                                            {...field}
-                                            label="Descripción"
-                                            fullWidth
-                                            margin="dense"
-                                            variant="standard"
-                                            error={meta.touched && Boolean(meta.error)}
-                                            helperText={meta.touched && meta.error}
-                                        />
-                                    )}
-                                </Field>
+                                <Box mt={2}>
+                                    <Typography variant="h6">Descripción</Typography>
+                                    <ReactQuill
+                                        value={values.description}
+                                        onChange={(value) => setFieldValue('description', value)}
+                                        theme="snow"
+                                    />
+                                </Box>
                                 <Field name="website">
                                     {({ field, meta }: any) => (
                                         <TextField
