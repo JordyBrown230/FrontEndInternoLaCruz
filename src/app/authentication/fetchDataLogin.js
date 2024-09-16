@@ -1,36 +1,23 @@
-const getSuspender = (promise) => {
-    let status = "pending";
-    let response;
-  
-    const suspender = promise.then(
-      (res) => {
-        status = "success";
-        response = res;
-      },
-      (err) => {
-        status = "error";
-        response = err;
-      }
-    );
-  
-    const read = () => {
-      switch (status) {
-        case "pending":
-          throw suspender;
-        case "error":
-          throw response;
-        default:
-          return response;
-      }
-    };
-  
-    return { read };
-  };
-  
-  export function fetchData(url, data) {
-    const promise = fetch(url)
-      .then((response) => response.json())
-      .then((json) => json);
-  
-    return getSuspender(promise);
-  }
+export async function fetchData(url, data) {
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },        
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const json = await response.json();
+        return json;
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        throw error;
+    }
+}
