@@ -14,7 +14,7 @@ import * as Yup from 'yup';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-// Interfaz de la atracción
+
 interface Attraction {
     id: number;
     title: string;
@@ -30,7 +30,7 @@ interface Attraction {
     phone?: string;
 }
 
-// Validación con Yup
+
 const validationSchema = Yup.object({
     title: Yup.string().required('Título es obligatorio'),
     description: Yup.string().required('Descripción es obligatoria'),
@@ -40,7 +40,7 @@ const validationSchema = Yup.object({
     lng: Yup.number().required('Longitud es obligatoria').min(-180).max(180),
     opening_hours: Yup.string().required('Horario de apertura es obligatorio'),
     website: Yup.string().url('Debe ser una URL válida').nullable(),
-    phone: Yup.string().nullable(), // Validación para el número de teléfono
+    phone: Yup.string().nullable(), 
     status: Yup.string().nullable()
 });
 
@@ -73,26 +73,26 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
     const handleSave = (values: Omit<Attraction, 'id'>) => {
         let updatedAttractions;
         if (currentAttraction) {
-            // Update existing attraction
+           
             updatedAttractions = attractions.map(a =>
                 a.id === currentAttraction.id ? { ...a, ...values } : a
             );
             toast.success('Atracción actualizada con éxito');
         } else {
-            // Add new attraction
+            
             updatedAttractions = [...attractions, { id: Date.now(), ...values }] as Attraction[];
             toast.success('Atracción agregada con éxito');
         }
         setAttractions(updatedAttractions);
-        setFilteredAttractions(updatedAttractions); // Actualiza también las atracciones filtradas
-        handleCloseDialog(); // Cierra el diálogo después de guardar
+        setFilteredAttractions(updatedAttractions); 
+        handleCloseDialog(); 
     };
 
     const handleDelete = () => {
         if (currentAttraction) {
             const updatedAttractions = attractions.filter(a => a.id !== currentAttraction.id);
             setAttractions(updatedAttractions);
-            setFilteredAttractions(updatedAttractions); // Actualiza también las atracciones filtradas
+            setFilteredAttractions(updatedAttractions); 
             toast.success('Atracción eliminada con éxito');
         }
         handleCloseDialog();
@@ -120,43 +120,43 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
 
     const generatePDF = (attraction: Attraction) => {
         const doc = new jsPDF();
-        const imageWidth = 80; // Ancho de cada imagen
-        const imageHeight = 60; // Alto de cada imagen
-        const margin = 10; // Espacio entre imágenes
-        const imagesPerRow = 2; // Número de imágenes por fila
-        const xOffset = 10; // Margen desde el borde izquierdo
-        const yOffset = 140; // Posición vertical inicial para imágenes
-        const borderRadius = 10; // Radio de los bordes redondeados de las imágenes
+        const imageWidth = 80; 
+        const imageHeight = 60; 
+        const margin = 10; 
+        const imagesPerRow = 2; 
+        const xOffset = 10; 
+        const yOffset = 140; 
+        const borderRadius = 10; 
     
-        // Colores
-        const primaryColor: [number, number, number] = [0, 207, 193]; // Verde Agua (#00CFC1)
-        const RedColor: [number, number, number] = [247, 247, 247]; // Gris claro (#F7F7F7)
-        const secondaryColor: [number, number, number] = [162, 223, 247]; // Celeste (#A2DFF7)
-        const buttonTextColor: [number, number, number] = [0, 0, 0]; // Negro (#000000)
-        const textColor: [number, number, number] = [51, 51, 51]; // Gris oscuro (#333333)
-        const borderColor: [number, number, number] = [0, 0, 0]; // Color del borde de las imágenes (Negro)
+     
+        const primaryColor: [number, number, number] = [0, 207, 193]; 
+        const RedColor: [number, number, number] = [247, 247, 247]; 
+        const secondaryColor: [number, number, number] = [162, 223, 247]; 
+        const buttonTextColor: [number, number, number] = [0, 0, 0]; 
+        const textColor: [number, number, number] = [51, 51, 51]; 
+        const borderColor: [number, number, number] = [0, 0, 0]; 
     
-        // Iconos (asume que tienes URLs o rutas a estos iconos)
+    
         const websiteIconUrl = 'https://cdn-icons-png.flaticon.com/256/8344/8344996.png';
         const googleMapsIconUrl = 'https://cdn-icons-png.flaticon.com/256/2642/2642502.png';
         const wazeIconUrl = 'https://cdn-icons-png.flaticon.com/256/3771/3771526.png';
     
-        const iconSize = 8; // Tamaño de los iconos
-        const buttonWidth = 55; // Ancho de cada botón
-        const buttonHeight = 12; // Alto de cada botón
+        const iconSize = 8; 
+        const buttonWidth = 55; 
+        const buttonHeight = 12; 
     
-        // Agregar título en verde agua
+       
         doc.setFontSize(24);
         doc.setFont("Helvetica", "bold");
         doc.setTextColor(...primaryColor);
         doc.text(attraction.title, 105, 20, { align: 'center' });
     
-        // Línea divisoria en celeste
+      
         doc.setLineWidth(1);
         doc.setDrawColor(...secondaryColor);
         doc.line(10, 25, 200, 25);
     
-        // Agregar descripción en gris oscuro
+        
         doc.setTextColor(...textColor);
         doc.setFontSize(14);
         doc.setFont("Helvetica", "normal");
@@ -164,35 +164,35 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
         const descriptionHeight = descriptionLines.length * 10; // Altura estimada del texto (10px por línea)
         doc.text(descriptionLines, 10, 35, { maxWidth: 190 });
     
-        // Ajustar posición vertical después de la descripción
-        let currentY = 35 + descriptionHeight + 10; // +10px de margen
+        
+        let currentY = 35 + descriptionHeight + 10; 
     
-        // Sección de detalles en verde agua
+       
         doc.setTextColor(...primaryColor);
         doc.setFontSize(12);
         doc.text(`Ubicación: ${attraction.location}`, 10, currentY);
-        currentY += 10; // Aumentar posición vertical
+        currentY += 10; 
         doc.text(`Horario: ${attraction.opening_hours}`, 10, currentY);
-        currentY += 10; // Aumentar posición vertical
+        currentY += 10; 
         doc.text(`Estado: ${attraction.status}`, 10, currentY);
-        currentY += 10; // Aumentar posición vertical
+        currentY += 10; 
     
-        // Teléfono en verde agua si está disponible
+  
         if (attraction.phone) {
             doc.text(`Teléfono: ${attraction.phone}`, 10, currentY);
-            currentY += 10; // Aumentar posición vertical
+            currentY += 10;
         }
     
-        // Función para dibujar botones con icono
+        
         const drawButtonWithIcon = (text: string, url: string, iconUrl: string, x: number, y: number) => {
-            // Fondo del botón (gris claro)
+          
             doc.setFillColor(...RedColor);
-            doc.roundedRect(x, y, buttonWidth, buttonHeight, 5, 5, 'F'); // Bordes redondeados
+            doc.roundedRect(x, y, buttonWidth, buttonHeight, 5, 5, 'F'); 
     
-            // Añadir icono
-            doc.addImage(iconUrl, 'PNG', x + 5, y + 2, iconSize, iconSize); // Ajustar posición del icono
+          
+            doc.addImage(iconUrl, 'PNG', x + 5, y + 2, iconSize, iconSize); 
     
-            // Hacer el texto clicable y visible
+           
             doc.setFontSize(10);
             doc.setTextColor(...buttonTextColor);
             doc.textWithLink(text, x + iconSize + 8, y + buttonHeight / 2 + 2, { align: 'left', url });

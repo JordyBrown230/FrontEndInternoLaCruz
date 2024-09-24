@@ -52,6 +52,12 @@ const Menuitems = [
     icon: IconUserEdit,
     href: "/crud-EducacionTuristica",
   },
+  {
+    id: uniqueId(),
+    title: "Accesibilidad",
+    icon: IconAccessible,
+    href: "/crud-accesibilidad",
+  },
 ];
 
 export default Menuitems;
