@@ -19,6 +19,7 @@ interface TransportInfo {
     website?: string; // Sitio web opcional
     phone?: string; // Número de teléfono opcional
     images: string[]; // Array de imágenes
+    urlimg: string[];
 }
 
 // Validación con Yup
@@ -39,10 +40,36 @@ const transportIcons: Record<string, React.ReactNode> = {
 };
 
 const Municipalidad = () => {
+    const fetchAttractions = async () => {
+        try {
+            const response = await fetch('http://localhost:9000/sit/transporte/listar', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }); // Reemplaza con la URL de tu API
+            //console.log(await response.json())
+            if (!response.ok) {
+                throw new Error('Network response was not ok'); // Manejo de errores de red
+            }
+            const data = await response.json(); // Asume que la API devuelve un JSON
+            //setData(data); // Asigna los datos de la API al estado
+            setTransportInfos(data.data)
+            setFilteredTransportInfos(data.data)
+        } catch (error) {
+            console.error('Error fetching attractions:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
     useEffect(() => {
-        AOS.init();
+        AOS.init(), fetchAttractions();
     }, []);
 
+    const [loading, setLoading] = useState(true); // Estado de carga
     const [transportInfos, setTransportInfos] = useState<TransportInfo[]>([]);
     const [filteredTransportInfos, setFilteredTransportInfos] = useState<TransportInfo[]>([]);
     const [openDialog, setOpenDialog] = useState(false);
@@ -60,8 +87,9 @@ const Municipalidad = () => {
         setOpenDeleteDialog(false);
     };
 
-    const handleSave = (values: Omit<TransportInfo, 'id'>) => {
+    const handleSave = async (values: Omit<TransportInfo, 'id'>) => {
         let updatedInfos;
+
         if (currentInfo) {
             // Actualizar información existente
             updatedInfos = transportInfos.map(info =>
@@ -69,21 +97,96 @@ const Municipalidad = () => {
             );
             toast.success('Información actualizada con éxito'); // Notificación de éxito
         } else {
-            // Agregar nueva información
-            updatedInfos = [...transportInfos, { id: Date.now(), ...values, images: [] }] as TransportInfo[];
-            toast.success('Información agregada con éxito'); // Notificación de éxito
+            try {
+                // Agregar nueva información
+                const addTransportResponse = await fetch('http://localhost:9000/sit/transporte/agregar', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(values),
+                });
+
+                if (!addTransportResponse.ok) {
+                    throw new Error('Error al agregar el transporte');
+                }
+
+                const newTransport = await addTransportResponse.json();
+                console.log(newTransport)
+                // Subida de imágenes (si existen)
+                if (values.images.length !== 0) {
+                    console.log(values.images)
+                    const formData = new FormData();
+                    values.images.forEach((file) => {
+                        formData.append('images', file); // 'images' es la clave que esperas en el backend
+                    });
+
+                    const imageUploadResponse = await fetch('http://localhost:9000/sit/transporte/agregar-imagenes/' + newTransport.data.transport_id, {
+                        method: 'POST',
+                        credentials: 'include',
+                        body: formData,
+                    });
+
+                    // Si la subida de imágenes falla, se elimina el transporte previamente agregado
+                    if (!imageUploadResponse.ok) {
+                        await fetch('http://localhost:9000/sit/transporte/eliminar/' + newTransport.data.transport_id, {
+                            method: 'DELETE',
+                            credentials: 'include',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        });
+
+                        const errorData = await imageUploadResponse.json();
+                        throw new Error(`Error al subir imágenes: ${errorData.message || 'Error desconocido'}`);
+                    }
+                }
+
+                // Actualizar lista de transportes con el nuevo transporte
+                fetchAttractions()
+                updatedInfos = [...transportInfos, { id: newTransport.data.transport_id, ...values, images: [] }] as TransportInfo[];
+                toast.success('Información agregada con éxito'); // Notificación de éxito
+            } catch (error) {
+                toast.error('Error al agregar la información de transporte');
+                console.error('Error:', error);
+                return;
+            }
         }
+
+        // Actualización del estado
         setTransportInfos(updatedInfos);
         setFilteredTransportInfos(updatedInfos);
         handleCloseDialog();
     };
 
-    const handleDelete = () => {
+
+    const handleDelete = async () => {
         if (currentInfo) {
-            const updatedInfos = transportInfos.filter(info => info.id !== currentInfo.id);
-            setTransportInfos(updatedInfos);
-            setFilteredTransportInfos(updatedInfos);
-            toast.error('Información eliminada con éxito'); // Notificación de eliminación
+            try {
+                const response = await fetch('http://localhost:9000/sit/transporte/eliminar/' + currentInfo.transport_id, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                // Verifica si la respuesta fue exitosa
+                if (!response.ok) {
+                    throw new Error('Error al eliminar la información');
+                }
+
+                // Filtra el estado local para eliminar el elemento
+                const updatedInfos = transportInfos.filter(info => info.transport_id !== currentInfo.transport_id);
+                setTransportInfos(updatedInfos);
+                setFilteredTransportInfos(updatedInfos);
+                toast.error('Información eliminada con éxito'); // Notificación de eliminación
+            } catch (error) {
+                console.error('Error al eliminar la información:', error);
+                toast.error('Hubo un problema al eliminar la información'); // Manejo del error
+            }
+
         }
         handleCloseDialog();
     };
@@ -127,15 +230,15 @@ const Municipalidad = () => {
                             endAdornment: <SearchIcon />,
                         }}
                         fullWidth
-                        sx={{ 
+                        sx={{
                             mb: 4,
                             maxWidth: 400
-                         }}
+                        }}
                     />
 
                     <Grid container spacing={4} justifyContent="center">
                         {filteredTransportInfos.map((info) => (
-                            <Grid item xs={12} md={6} key={info.id} data-aos="fade-up">
+                            <Grid item xs={12} md={6} key={info.transport_id} data-aos="fade-up">
                                 <Card>
                                     <CardContent>
                                         <Typography gutterBottom variant="h5" component="div">
@@ -155,10 +258,17 @@ const Municipalidad = () => {
                                                 Teléfono: {info.phone}
                                             </Typography>
                                         )}
-                                        {info.images.length > 0 && (
+                                        {info.Images.length > 0 && (
                                             <Box mt={2}>
-                                                {info.images.map((image, index) => (
-                                                    <img key={index} src={image} alt={`Imagen ${index + 1}`} style={{ width: '100%', height: 'auto', borderRadius: '4px', marginBottom: '8px' }} />
+                                                {info.Images.map((Image, index) => (
+                                                    Image.url ? ( // Verifica que Image.url esté definido
+                                                        <img
+                                                            key={index}
+                                                            src={Image.url}
+                                                            alt={`Imagen ${index + 1}`}
+                                                            style={{ width: '100%', height: 'auto', borderRadius: '4px', marginBottom: '8px' }}
+                                                        />
+                                                    ) : null
                                                 ))}
                                             </Box>
                                         )}
@@ -201,8 +311,10 @@ const Municipalidad = () => {
                         description: currentInfo ? currentInfo.description : '',
                         type: currentInfo ? currentInfo.type : '',
                         website: currentInfo ? currentInfo.website : '',
-                        phone: currentInfo ? currentInfo.phone : '', 
+                        phone: currentInfo ? currentInfo.phone : '',
                         images: currentInfo ? currentInfo.images : [],
+                        urlimg: currentInfo ? currentInfo.urlimg : [],
+
                     }}
                     validationSchema={validationSchema}
                     onSubmit={(values) => {
@@ -290,36 +402,28 @@ const Municipalidad = () => {
                                     onChange={(e) => {
                                         const files = e.target.files;
                                         if (files && files.length > 0) {
-                                            const newImages = Array.from(files).map(file => {
-                                                const reader = new FileReader();
-                                                reader.readAsDataURL(file);
-                                                return new Promise<string>((resolve) => {
-                                                    reader.onloadend = () => {
-                                                        resolve(reader.result as string);
-                                                    };
-                                                });
-                                            });
+                                            const newFiles = Array.from(files);
+                                            const newImages = newFiles.map(file => URL.createObjectURL(file));
+                                            setFieldValue('images', [...values.images, ...newFiles].slice(0, 5)); // Envía archivos directamente para el backend
 
-                                            Promise.all(newImages).then(images => {
-                                                setFieldValue('images', [...values.images, ...images].slice(0, 5));
-                                            });
+                                            setFieldValue('urlimg', [...values.urlimg, ...newImages].slice(0, 5));
                                         }
                                     }}
                                 />
                                 <label htmlFor="upload-images">
                                     <Button variant="contained" component="span" sx={{ mt: 2 }}>
-                                        Subir Logo de Empresa
+                                        Subir Imágenes (Máximo 5)
                                     </Button>
                                 </label>
-                                {values.images.length > 0 && (
+                                {values.urlimg.length > 0 && (
                                     <Box mt={2}>
-                                        {values.images.map((image, index) => (
+                                        {values.urlimg.map((urlimg, index) => (
                                             <Box key={index} display="inline-block" position="relative" mr={1}>
-                                                <img src={image} alt={`Previsualización ${index + 1}`} style={{ width: '100px', height: '100px', marginRight: '8px' }} />
+                                                <img src={urlimg} alt={`Previsualización ${index + 1}`} style={{ width: '100px', height: '100px', marginRight: '8px' }} />
                                                 <IconButton
                                                     onClick={() => {
-                                                        const updatedImages = values.images.filter((_, i) => i !== index);
-                                                        setFieldValue('images', updatedImages);
+                                                        const updatedImages = values.urlimg.filter((_, i) => i !== index);
+                                                        setFieldValue('urlimg', updatedImages);
                                                     }}
                                                     sx={{ position: 'absolute', top: 0, right: 0 }}
                                                 >

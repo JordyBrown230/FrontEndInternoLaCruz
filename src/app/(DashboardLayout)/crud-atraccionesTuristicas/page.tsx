@@ -13,35 +13,70 @@ import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-
+import { fetchData } from "./fetchData.js";
+import { fetchDelete } from "./fetchDelete.js";
+import { Image as ImageIcon } from '@mui/icons-material';
+import { Accordion, AccordionSummary, AccordionDetails, FormControlLabel, Checkbox } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 interface Attraction {
-    id: number;
-    title: string;
+    attraction_id: number;
+    name: string;
+    urlimg: string[];
     description: string;
     images: string[];
     location: string;
-    lat: number;
-    lng: number;
+    latitude: number;
+    longitude: number;
     type_attraction: string;
     status: string;
     website: string;
     opening_hours: string;
-    phone?: string;
+    remarks: string;
+    services: string;
+    owner: string;
+    community: string;
+    ramp_access: boolean;
+    acceso_ascensor: boolean;
+    wide_doors: boolean;
+    senalizacion_braille: boolean;
+    accessible_bathrooms: boolean;
+    reserved_parking: boolean;
+    trained_staff: boolean;
+    audio_guides: boolean;
+    sign_language_services: boolean;
+    accessible_rest_areas: boolean;
+    online_accessibility: boolean;
+    braille_signage: boolean;
+    elevator_access: boolean;
+    other_services: string;
+    contact_value: string;
+    contact_type: string;
 }
 
 
 const validationSchema = Yup.object({
-    title: Yup.string().required('Título es obligatorio'),
+    name: Yup.string().required('Título es obligatorio'),
     description: Yup.string().required('Descripción es obligatoria'),
     type_attraction: Yup.string().required('Tipo de atracción es obligatorio'),
     location: Yup.string().required('Ubicación es obligatoria'),
-    lat: Yup.number().required('Latitud es obligatoria').min(-90).max(90),
-    lng: Yup.number().required('Longitud es obligatoria').min(-180).max(180),
+    latitude: Yup.number().required('Latitud es obligatoria').min(-90).max(90),
+    longitude: Yup.number().required('Longitud es obligatoria').min(-180).max(180),
     opening_hours: Yup.string().required('Horario de apertura es obligatorio'),
     website: Yup.string().url('Debe ser una URL válida').nullable(),
-    phone: Yup.string().nullable(), 
-    status: Yup.string().nullable()
+    status: Yup.string().nullable(),
+    ramp_access: Yup.boolean(),
+    acceso_ascensor: Yup.boolean(),
+    wide_doors: Yup.boolean(),
+    senalizacion_braille: Yup.boolean(),
+    accessible_bathrooms: Yup.boolean(),
+    reserved_parking: Yup.boolean(),
+    trained_staff: Yup.boolean(),
+    audio_guides: Yup.boolean(),
+    sign_language_services: Yup.boolean(),
+    accessible_rest_areas: Yup.boolean(),
+    online_accessibility: Yup.boolean(),
+    other_services: Yup.string().nullable(),
 });
 
 interface Props {
@@ -49,16 +84,59 @@ interface Props {
 }
 
 const Municipalidad: React.FC<Props> = ({ attraction }) => {
+
+    const fetchAttractions = async () => {
+        try {
+            const response = await fetch('http://localhost:9000/sit/atraccion/listar', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }); // Reemplaza con la URL de tu API
+            //console.log(await response.json())
+            if (!response.ok) {
+                throw new Error('Network response was not ok'); // Manejo de errores de red
+            }
+            const data = await response.json(); // Asume que la API devuelve un JSON
+            //setData(data); // Asigna los datos de la API al estado
+            setAttractions(data)
+            setFilteredAttractions(data)
+        } catch (error) {
+            console.error('Error fetching attractions:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        AOS.init();
+        AOS.init(); fetchAttractions();
     }, []);
 
+    const [loading, setLoading] = useState(true); // Estado de carga
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [attractions, setAttractions] = useState<Attraction[]>([]);
     const [filteredAttractions, setFilteredAttractions] = useState<Attraction[]>([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [currentAttraction, setCurrentAttraction] = useState<Attraction | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [contactos, setContactos] = useState<{ contact_value: string; contact_type: string }[]>([]);
+    const [contact_value, setValor] = useState('');
+    const [contact_type, setTipo] = useState('phone'); // 'telefono' o 'gmail'
+
+    const handleAddContact = () => {
+        if (contact_value) {
+            setContactos([...contactos, { contact_value, contact_type }]);
+            setValor(''); // Limpiar el campo de valor
+        }
+    };
+    const data = searchQuery ? filteredAttractions : attractions;
+
+    const handleDeleteContact = (index: number) => {
+        const updatedContacts = contactos.filter((_, i) => i !== index);
+        setContactos(updatedContacts);
+    };
 
     const handleClickOpen = (attraction: Attraction | null = null) => {
         setCurrentAttraction(attraction);
@@ -70,29 +148,88 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
         setOpenDeleteDialog(false);
     };
 
-    const handleSave = (values: Omit<Attraction, 'id'>) => {
+    const handleSave = async (values: Omit<Attraction, 'attraction_id'>) => {
+
+        const attractionData = {
+            name: values.name,
+            description: values.description,
+            type_attraction: values.type_attraction,
+            website: values.website,
+            status: values.status,
+            location: values.location,
+            opening_hours: values.opening_hours,
+            latitude: values.latitude,
+            longitude: values.longitude,
+            remarks: values.remarks,
+            services: values.services,
+            owner: values.owner,
+            community: values.community,
+            accessibility: {
+                ramp_access: values.ramp_access,
+                elevator_access: values.elevator_access,
+                wide_doors: values.wide_doors,
+                braille_signage: values.braille_signage,
+                accessible_bathrooms: values.accessible_bathrooms,
+                reserved_parking: values.reserved_parking,
+                trained_staff: values.trained_staff,
+                audio_guides: values.audio_guides,
+                sign_language_services: values.sign_language_services,
+                accessible_rest_areas: values.accessible_rest_areas,
+                online_accessibility: values.online_accessibility,
+                other_services: values.other_services,
+            },
+            images: values.images,
+            contacts: contactos,
+        };
+        console.log(attractionData)
+
+        try {
+            const response = await fetchData('http://localhost:9000/sit/atraccion/agregar', attractionData);
+            console.log(response)
+            fetchAttractions()
+        } catch (error) {
+            console.error('Error:', error);
+        }
+
+
         let updatedAttractions;
         if (currentAttraction) {
-           
+
             updatedAttractions = attractions.map(a =>
-                a.id === currentAttraction.id ? { ...a, ...values } : a
+                a.attraction_id === currentAttraction.attraction_id ? { ...a, ...values } : a
             );
             toast.success('Atracción actualizada con éxito');
         } else {
-            
+
             updatedAttractions = [...attractions, { id: Date.now(), ...values }] as Attraction[];
             toast.success('Atracción agregada con éxito');
         }
         setAttractions(updatedAttractions);
-        setFilteredAttractions(updatedAttractions); 
-        handleCloseDialog(); 
+        setFilteredAttractions(updatedAttractions);
+        handleCloseDialog();
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (currentAttraction) {
-            const updatedAttractions = attractions.filter(a => a.id !== currentAttraction.id);
+
+            if (currentAttraction) {
+                try {
+                    const response = await fetchDelete('http://localhost:9000/sit/atraccion/eliminar/', currentAttraction.attraction_id);
+                    const updatedAttractions = attractions.filter(a => a.attraction_id !== currentAttraction.attraction_id);
+                    setAttractions(updatedAttractions);
+                    setFilteredAttractions(updatedAttractions); // Actualiza también las atracciones filtradas
+                    toast.success('Atracción eliminada con éxito');
+                    handleCloseDialog();
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+
+            }
+
+
+            const updatedAttractions = attractions.filter(a => a.attraction_id !== currentAttraction.attraction_id);
             setAttractions(updatedAttractions);
-            setFilteredAttractions(updatedAttractions); 
+            setFilteredAttractions(updatedAttractions);
             toast.success('Atracción eliminada con éxito');
         }
         handleCloseDialog();
@@ -111,7 +248,7 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
         setSearchQuery(query);
 
         const filtered = attractions.filter(attraction =>
-            attraction.title.toLowerCase().includes(query) ||
+            attraction.name.toLowerCase().includes(query) ||
             attraction.description.toLowerCase().includes(query)
         );
         setFilteredAttractions(filtered);
@@ -120,140 +257,140 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
 
     const generatePDF = (attraction: Attraction) => {
         const doc = new jsPDF();
-        const imageWidth = 80; 
-        const imageHeight = 60; 
-        const margin = 10; 
-        const imagesPerRow = 2; 
-        const xOffset = 10; 
-        const yOffset = 140; 
-        const borderRadius = 10; 
-    
-     
-        const primaryColor: [number, number, number] = [0, 207, 193]; 
-        const RedColor: [number, number, number] = [247, 247, 247]; 
-        const secondaryColor: [number, number, number] = [162, 223, 247]; 
-        const buttonTextColor: [number, number, number] = [0, 0, 0]; 
-        const textColor: [number, number, number] = [51, 51, 51]; 
-        const borderColor: [number, number, number] = [0, 0, 0]; 
-    
-    
+        const imageWidth = 80;
+        const imageHeight = 60;
+        const margin = 10;
+        const imagesPerRow = 2;
+        const xOffset = 10;
+        const yOffset = 140;
+        const borderRadius = 10;
+
+
+        const primaryColor: [number, number, number] = [0, 207, 193];
+        const RedColor: [number, number, number] = [247, 247, 247];
+        const secondaryColor: [number, number, number] = [162, 223, 247];
+        const buttonTextColor: [number, number, number] = [0, 0, 0];
+        const textColor: [number, number, number] = [51, 51, 51];
+        const borderColor: [number, number, number] = [0, 0, 0];
+
+
         const websiteIconUrl = 'https://cdn-icons-png.flaticon.com/256/8344/8344996.png';
         const googleMapsIconUrl = 'https://cdn-icons-png.flaticon.com/256/2642/2642502.png';
         const wazeIconUrl = 'https://cdn-icons-png.flaticon.com/256/3771/3771526.png';
-    
-        const iconSize = 8; 
-        const buttonWidth = 55; 
-        const buttonHeight = 12; 
-    
-       
+
+        const iconSize = 8;
+        const buttonWidth = 55;
+        const buttonHeight = 12;
+
+
         doc.setFontSize(24);
         doc.setFont("Helvetica", "bold");
         doc.setTextColor(...primaryColor);
-        doc.text(attraction.title, 105, 20, { align: 'center' });
-    
-      
+        doc.text(attraction.name, 105, 20, { align: 'center' });
+
+
         doc.setLineWidth(1);
         doc.setDrawColor(...secondaryColor);
         doc.line(10, 25, 200, 25);
-    
-        
+
+
         doc.setTextColor(...textColor);
         doc.setFontSize(14);
         doc.setFont("Helvetica", "normal");
         const descriptionLines = doc.splitTextToSize(attraction.description, 190);
         const descriptionHeight = descriptionLines.length * 10; // Altura estimada del texto (10px por línea)
         doc.text(descriptionLines, 10, 35, { maxWidth: 190 });
-    
-        
-        let currentY = 35 + descriptionHeight + 10; 
-    
-       
+
+
+        let currentY = 35 + descriptionHeight + 10;
+
+
         doc.setTextColor(...primaryColor);
         doc.setFontSize(12);
         doc.text(`Ubicación: ${attraction.location}`, 10, currentY);
-        currentY += 10; 
+        currentY += 10;
         doc.text(`Horario: ${attraction.opening_hours}`, 10, currentY);
-        currentY += 10; 
+        currentY += 10;
         doc.text(`Estado: ${attraction.status}`, 10, currentY);
-        currentY += 10; 
-    
-  
+        currentY += 10;
+
+
         if (attraction.phone) {
             doc.text(`Teléfono: ${attraction.phone}`, 10, currentY);
             currentY += 10;
         }
-    
-        
+
+
         const drawButtonWithIcon = (text: string, url: string, iconUrl: string, x: number, y: number) => {
-          
+
             doc.setFillColor(...RedColor);
-            doc.roundedRect(x, y, buttonWidth, buttonHeight, 5, 5, 'F'); 
-    
-          
-            doc.addImage(iconUrl, 'PNG', x + 5, y + 2, iconSize, iconSize); 
-    
-           
+            doc.roundedRect(x, y, buttonWidth, buttonHeight, 5, 5, 'F');
+
+
+            doc.addImage(iconUrl, 'PNG', x + 5, y + 2, iconSize, iconSize);
+
+
             doc.setFontSize(10);
             doc.setTextColor(...buttonTextColor);
             doc.textWithLink(text, x + iconSize + 8, y + buttonHeight / 2 + 2, { align: 'left', url });
         };
-    
+
         // Añadir botones horizontalmente
         const buttonSpacing = buttonWidth + 10; // Espacio entre los botones
         let buttonXPosition = 10; // Posición horizontal inicial de los botones
         const buttonYPosition = currentY; // Posición vertical para los botones
-    
+
         // Botón con icono para el sitio web
         drawButtonWithIcon('Visitar Sitio Web', attraction.website, websiteIconUrl, buttonXPosition, buttonYPosition);
-    
+
         // Botón con icono para Google Maps
         buttonXPosition += buttonSpacing; // Mover a la derecha para el siguiente botón
-        drawButtonWithIcon('Ver en Google Maps', `https://www.google.com/maps?q=${attraction.lat},${attraction.lng}`, googleMapsIconUrl, buttonXPosition, buttonYPosition);
-    
+        drawButtonWithIcon('Ver en Google Maps', `https://www.google.com/maps?q=${attraction.latitude},${attraction.longitude}`, googleMapsIconUrl, buttonXPosition, buttonYPosition);
+
         // Botón con icono para Waze
         buttonXPosition += buttonSpacing; // Mover a la derecha para el siguiente botón
-        drawButtonWithIcon('Ver en Waze', `https://www.waze.com/ul?ll=${attraction.lat},${attraction.lng}&navigate=yes`, wazeIconUrl, buttonXPosition, buttonYPosition);
-    
+        drawButtonWithIcon('Ver en Waze', `https://www.waze.com/ul?ll=${attraction.latitude},${attraction.longitude}&navigate=yes`, wazeIconUrl, buttonXPosition, buttonYPosition);
+
         // Ajustar la posición vertical para las imágenes
         let xPosition = xOffset;
         let yPosition = buttonYPosition + buttonHeight + 10; // Aumentar posición vertical después de los botones
-    
+
         // Agregar imágenes con bordes redondeados y sombra
         attraction.images.forEach((imageUrl, index) => {
             if (index % imagesPerRow === 0 && index !== 0) {
                 xPosition = xOffset;
                 yPosition += imageHeight + margin; // Mover a la siguiente fila
             }
-    
+
             // Verificar si la imagen se sale de la página
             if (yPosition + imageHeight > doc.internal.pageSize.height - 20) {
                 // Añadir una nueva página
                 doc.addPage();
                 yPosition = 20; // Reiniciar posición vertical en la nueva página
             }
-    
+
             // Añadir sombra
             doc.setFillColor(229, 229, 229); // Color de sombra (gris claro)
             doc.rect(xPosition + 2, yPosition + 2, imageWidth, imageHeight, 'F'); // Crear un rectángulo gris para sombra
             doc.setFillColor(...secondaryColor); // Color del fondo del rectángulo (celeste)
             doc.rect(xPosition, yPosition, imageWidth, imageHeight, 'F'); // Crear un rectángulo celeste para el fondo de la imagen
-    
+
             // Añadir imagen con borde redondeado
             doc.addImage(imageUrl, 'JPEG', xPosition, yPosition, imageWidth, imageHeight);
-    
+
             xPosition += imageWidth + margin; // Mover a la siguiente columna
         });
-    
+
         // Pie de página en celeste
         doc.setTextColor(...secondaryColor);
         doc.setFontSize(10);
         doc.text('Generado por Sistema de Información Turística', 105, doc.internal.pageSize.height - 10, { align: 'center' });
-    
+
         // Guardar el PDF
         doc.save('attraction.pdf');
     };
-    
-    
+
+
     return (
         <PageContainer title="Atracciones" description="Una página para gestionar atracciones turísticas">
             <DashboardCard>
@@ -279,20 +416,27 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                     />
                     <Grid container spacing={4} justifyContent="center">
                         {filteredAttractions.map((attraction) => (
-                            <Grid item xs={12} md={6} key={attraction.id} data-aos="fade-up">
-                                <Card id={`attraction-${attraction.id}`}>
+                            <Grid item xs={12} md={6} key={attraction.attraction_id} data-aos="fade-up">
+                                <Card id={`attraction-${attraction.attraction_id}`}>
                                     <Carousel>
-                                        {attraction.images.map((image, index) => (
-                                            <img key={index} src={image} alt={`Imagen ${index + 1}`} height="300" width="100%" />
-                                        ))}
+                                        {attraction.Images && attraction.Images.length > 0 ? (
+                                            attraction.Images.map((Images, index) => (
+                                                <img key={index} src={Images.url} alt={`Imagen ${index + 1}`} height="300" width="100%" />
+                                            ))
+                                        ) : (
+                                            <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="300px">
+                                                <ImageIcon style={{ fontSize: '50px', color: 'gray' }} />
+                                                <Typography variant="body2" color="text.secondary">No hay imágenes disponibles</Typography>
+                                            </Box>
+                                        )}
                                     </Carousel>
                                     <CardContent>
                                         <Typography gutterBottom variant="h5" component="div">
-                                            {attraction.title}
+                                            {attraction.name}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
                                             {attraction.description}
-                                        </Typography>                 
+                                        </Typography>
                                         <Typography variant="body2" color="text.secondary">
                                             Tipo: {attraction.type_attraction}
                                         </Typography>
@@ -305,9 +449,9 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                         <Typography variant="body2" color="text.secondary">
                                             Estado: {attraction.status}
                                         </Typography>
-                                        {attraction.phone && (
+                                        {attraction.contact_value && (
                                             <Typography variant="body2" color="text.secondary">
-                                                Teléfono: {attraction.phone}
+                                                Teléfono: {attraction.contact_value}
                                             </Typography>
                                         )}
                                         {attraction.website && (
@@ -327,7 +471,7 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                                 variant="outlined"
                                                 color="primary"
                                                 startIcon={<DirectionsIcon />}
-                                                href={getGoogleMapsUrl(attraction.lat, attraction.lng)}
+                                                href={getGoogleMapsUrl(attraction.latitude, attraction.longitude)}
                                                 target="_blank"
                                             >
                                                 Ver en Google Maps
@@ -336,7 +480,7 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                                 variant="outlined"
                                                 color="secondary"
                                                 startIcon={<DirectionsIcon />}
-                                                href={getWazeUrl(attraction.lat, attraction.lng)}
+                                                href={getWazeUrl(attraction.latitude, attraction.longitude)}
                                                 target="_blank"
                                             >
                                                 Ver en Waze
@@ -354,21 +498,21 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                         </Box>
                                         <br />
                                         <Button
-                                                variant="contained"
-                                                color="primary"
-                                                onClick={() => generatePDF(attraction)}
-                                                
-                                            >
-                                                Descargar Folleto
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={() => generatePDF(attraction)}
+
+                                        >
+                                            Descargar Folleto
                                         </Button>
                                         <br />
                                         <br />
                                         <IconButton onClick={() => handleClickOpen(attraction)} aria-label="edit">
-                                                <EditIcon />
-                                            </IconButton>
-                                            <IconButton onClick={() => handleDeleteConfirmation(attraction)} aria-label="delete">
-                                                <DeleteIcon />
-                                            </IconButton>
+                                            <EditIcon />
+                                        </IconButton>
+                                        <IconButton onClick={() => handleDeleteConfirmation(attraction)} aria-label="delete">
+                                            <DeleteIcon />
+                                        </IconButton>
                                     </CardContent>
                                 </Card>
                             </Grid>
@@ -382,17 +526,37 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                 <DialogTitle>{currentAttraction ? 'Editar Atracción' : 'Agregar Nueva Atracción'}</DialogTitle>
                 <Formik
                     initialValues={{
-                        title: currentAttraction ? currentAttraction.title : '',
+                        name: currentAttraction ? currentAttraction.name : '',
+                        urlimg: currentAttraction ? currentAttraction.urlimg : [],
                         description: currentAttraction ? currentAttraction.description : '',
                         type_attraction: currentAttraction ? currentAttraction.type_attraction : '',
                         location: currentAttraction ? currentAttraction.location : '',
-                        lat: currentAttraction ? currentAttraction.lat : 0,
-                        lng: currentAttraction ? currentAttraction.lng : 0,
+                        latitude: currentAttraction ? currentAttraction.latitude : 0,
+                        longitude: currentAttraction ? currentAttraction.longitude : 0,
                         opening_hours: currentAttraction ? currentAttraction.opening_hours : '',
                         website: currentAttraction ? currentAttraction.website : '',
-                        phone: currentAttraction ? currentAttraction.phone : '',
                         status: currentAttraction ? currentAttraction.status : '',
-                        images: currentAttraction ? currentAttraction.images : []
+                        images: currentAttraction ? currentAttraction.images : [],
+                        ramp_access: currentAttraction ? currentAttraction.ramp_access : false,
+                        acceso_ascensor: currentAttraction ? currentAttraction.acceso_ascensor : false,
+                        wide_doors: currentAttraction ? currentAttraction.wide_doors : false,
+                        senalizacion_braille: currentAttraction ? currentAttraction.senalizacion_braille : false,
+                        accessible_bathrooms: currentAttraction ? currentAttraction.accessible_bathrooms : false,
+                        reserved_parking: currentAttraction ? currentAttraction.reserved_parking : false,
+                        trained_staff: currentAttraction ? currentAttraction.trained_staff : false,
+                        audio_guides: currentAttraction ? currentAttraction.audio_guides : false,
+                        sign_language_services: currentAttraction ? currentAttraction.sign_language_services : false,
+                        accessible_rest_areas: currentAttraction ? currentAttraction.accessible_rest_areas : false,
+                        online_accessibility: currentAttraction ? currentAttraction.online_accessibility : false,
+                        other_services: currentAttraction ? currentAttraction.other_services : '',
+                        remarks: currentAttraction ? currentAttraction.remarks : '',
+                        services: currentAttraction ? currentAttraction.services : '',
+                        owner: currentAttraction ? currentAttraction.owner : '',
+                        community: currentAttraction ? currentAttraction.community : '',
+                        contact_value: currentAttraction ? currentAttraction.contact_value : '',
+                        contact_type: currentAttraction ? currentAttraction.contact_type : '',
+                        braille_signage: currentAttraction ? currentAttraction.braille_signage : false,
+                        elevator_access: currentAttraction ? currentAttraction.elevator_access : false,
                     }}
                     validationSchema={validationSchema}
                     onSubmit={handleSave}
@@ -400,7 +564,7 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                     {({ setFieldValue, values }) => (
                         <Form>
                             <DialogContent>
-                                <Field name="title">
+                                <Field name="name">
                                     {({ field, meta }: any) => (
                                         <TextField
                                             {...field}
@@ -456,7 +620,7 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                         />
                                     )}
                                 </Field>
-                                <Field name="lat">
+                                <Field name="latitude">
                                     {({ field, meta }: any) => (
                                         <TextField
                                             {...field}
@@ -471,7 +635,7 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                         />
                                     )}
                                 </Field>
-                                <Field name="lng">
+                                <Field name="longitude">
                                     {({ field, meta }: any) => (
                                         <TextField
                                             {...field}
@@ -542,11 +706,11 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                         </div>
                                     )}
                                 </Field>
-                                <Field name="phone">
+                                <Field name="services">
                                     {({ field, meta }: any) => (
                                         <TextField
                                             {...field}
-                                            label="Número de Teléfono"
+                                            label="Servicios"
                                             fullWidth
                                             margin="dense"
                                             variant="standard"
@@ -556,6 +720,160 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                         />
                                     )}
                                 </Field>
+                                <Field name="owner">
+                                    {({ field, meta }: any) => (
+                                        <TextField
+                                            {...field}
+                                            label="Propietario"
+                                            fullWidth
+                                            margin="dense"
+                                            variant="standard"
+                                            error={meta.touched && Boolean(meta.error)}
+                                            helperText={meta.touched && meta.error}
+                                            sx={{ '& .MuiInputBase-input': { '&:hover': { color: 'blue' } } }}
+                                        />
+                                    )}
+                                </Field>
+                                <Field name="community">
+                                    {({ field, meta }: any) => (
+                                        <TextField
+                                            {...field}
+                                            label="Comunidad"
+                                            fullWidth
+                                            margin="dense"
+                                            variant="standard"
+                                            error={meta.touched && Boolean(meta.error)}
+                                            helperText={meta.touched && meta.error}
+                                            sx={{ '& .MuiInputBase-input': { '&:hover': { color: 'blue' } } }}
+                                        />
+                                    )}
+                                </Field>
+                                <Field name="remarks">
+                                    {({ field, meta }: any) => (
+                                        <TextField
+                                            {...field}
+                                            label="Observaciones"
+                                            fullWidth
+                                            margin="dense"
+                                            variant="standard"
+                                            error={meta.touched && Boolean(meta.error)}
+                                            helperText={meta.touched && meta.error}
+                                            sx={{ '& .MuiInputBase-input': { '&:hover': { color: 'blue' } } }}
+                                        />
+                                    )}
+                                </Field>
+
+                                {/* Sección de Accesibilidad */}
+                                <Accordion>
+                                    <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
+                                        <Typography variant="h6">Accesibilidad</Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        <Field name="ramp_access">
+                                            {({ field }: any) => (
+                                                <FormControlLabel
+                                                    control={<Checkbox {...field} checked={field.value} />}
+                                                    label="Acceso con Rampa"
+                                                />
+                                            )}
+                                        </Field>
+                                        <Field name="elevator_access">
+                                            {({ field }: any) => (
+                                                <FormControlLabel
+                                                    control={<Checkbox {...field} checked={field.value} />}
+                                                    label="Acceso con Ascensor"
+                                                />
+                                            )}
+                                        </Field>
+                                        <Field name="wide_doors">
+                                            {({ field }: any) => (
+                                                <FormControlLabel
+                                                    control={<Checkbox {...field} checked={field.value} />}
+                                                    label="Puertas Anchas"
+                                                />
+                                            )}
+                                        </Field>
+                                        <Field name="accessible_bathrooms">
+                                            {({ field }: any) => (
+                                                <FormControlLabel
+                                                    control={<Checkbox {...field} checked={field.value} />}
+                                                    label="Baños Accesibles"
+                                                />
+                                            )}
+                                        </Field>
+                                        <Field name="reserved_parking">
+                                            {({ field }: any) => (
+                                                <FormControlLabel
+                                                    control={<Checkbox {...field} checked={field.value} />}
+                                                    label="Estacionamiento Reservado"
+                                                />
+                                            )}
+                                        </Field>
+                                        <Field name="trained_staff">
+                                            {({ field }: any) => (
+                                                <FormControlLabel
+                                                    control={<Checkbox {...field} checked={field.value} />}
+                                                    label="Personal Capacitado"
+                                                />
+                                            )}
+                                        </Field>
+                                        <Field name="audio_guides">
+                                            {({ field }: any) => (
+                                                <FormControlLabel
+                                                    control={<Checkbox {...field} checked={field.value} />}
+                                                    label="Guías de Audio"
+                                                />
+                                            )}
+                                        </Field>
+                                        <Field name="sign_language_services">
+                                            {({ field }: any) => (
+                                                <FormControlLabel
+                                                    control={<Checkbox {...field} checked={field.value} />}
+                                                    label="Servicios de Lenguaje de Señas"
+                                                />
+                                            )}
+                                        </Field>
+                                        <Field name="accessible_rest_areas">
+                                            {({ field }: any) => (
+                                                <FormControlLabel
+                                                    control={<Checkbox {...field} checked={field.value} />}
+                                                    label="Áreas de Descanso Accesibles"
+                                                />
+                                            )}
+                                        </Field>
+                                        <Field name="braille_signage">
+                                            {({ field }: any) => (
+                                                <FormControlLabel
+                                                    control={<Checkbox {...field} checked={field.value} />}
+                                                    label="Señalización en Braille"
+                                                />
+                                            )}
+                                        </Field>
+                                        <Field name="online_accessibility">
+                                            {({ field }: any) => (
+                                                <FormControlLabel
+                                                    control={<Checkbox {...field} checked={field.value} />}
+                                                    label="Accesibilidad en Línea"
+                                                />
+                                            )}
+                                        </Field>
+                                        <Field name="other_services">
+                                            {({ field, meta }: any) => (
+                                                <TextField
+                                                    {...field}
+                                                    label="Otros Servicios"
+                                                    fullWidth
+                                                    margin="dense"
+                                                    variant="standard"
+                                                    error={meta.touched && Boolean(meta.error)}
+                                                    helperText={meta.touched && meta.error}
+                                                    sx={{ '& .MuiInputBase-input': { '&:hover': { color: 'blue' } } }}
+                                                />
+                                            )}
+                                        </Field>
+                                    </AccordionDetails>
+                                </Accordion>
+
                                 <input
                                     accept="image/*"
                                     style={{ display: 'none' }}
@@ -565,19 +883,11 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                     onChange={(e) => {
                                         const files = e.target.files;
                                         if (files && files.length > 0) {
-                                            const newImages = Array.from(files).map(file => {
-                                                const reader = new FileReader();
-                                                reader.readAsDataURL(file);
-                                                return new Promise<string>((resolve) => {
-                                                    reader.onloadend = () => {
-                                                        resolve(reader.result as string);
-                                                    };
-                                                });
-                                            });
+                                            const newFiles = Array.from(files);
+                                            const newImages = newFiles.map(file => URL.createObjectURL(file));
+                                            setFieldValue('images', [...values.images, ...newFiles].slice(0, 5)); // Envía archivos directamente para el backend
 
-                                            Promise.all(newImages).then(images => {
-                                                setFieldValue('images', [...values.images, ...images].slice(0, 5));
-                                            });
+                                            setFieldValue('urlimg', [...values.urlimg, ...newImages].slice(0, 5));
                                         }
                                     }}
                                 />
@@ -586,15 +896,15 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                         Subir Imágenes (Máximo 5)
                                     </Button>
                                 </label>
-                                {values.images.length > 0 && (
+                                {values.urlimg.length > 0 && (
                                     <Box mt={2}>
-                                        {values.images.map((image, index) => (
+                                        {values.urlimg.map((urlimg, index) => (
                                             <Box key={index} display="inline-block" position="relative" mr={1}>
-                                                <img src={image} alt={`Previsualización ${index + 1}`} style={{ width: '100px', height: '100px', marginRight: '8px' }} />
+                                                <img src={urlimg} alt={`Previsualización ${index + 1}`} style={{ width: '100px', height: '100px', marginRight: '8px' }} />
                                                 <IconButton
                                                     onClick={() => {
-                                                        const updatedImages = values.images.filter((_, i) => i !== index);
-                                                        setFieldValue('images', updatedImages);
+                                                        const updatedImages = values.urlimg.filter((_, i) => i !== index);
+                                                        setFieldValue('urlimg', updatedImages);
                                                     }}
                                                     sx={{ position: 'absolute', top: 0, right: 0 }}
                                                 >
@@ -604,6 +914,41 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                         ))}
                                     </Box>
                                 )}
+
+                                <br />
+                                <br />
+                                <Box>
+                                    <Typography variant="h6">Agregar Contactos</Typography>
+                                    <br />
+                                    <Box display="flex" alignItems="center" mb={2}>
+                                        <TextField
+                                            label="Valor"
+                                            variant="outlined"
+                                            value={contact_value}
+                                            onChange={(e) => setValor(e.target.value)}
+                                            sx={{ mr: 2 }}
+                                        />
+                                        <select value={contact_type} onChange={(e) => setTipo(e.target.value)} style={{ marginRight: '16px' }}>
+                                            <option value="phone">Teléfono</option>
+                                            <option value="email">Correo</option>
+                                        </select>
+                                        <Button variant="contained" color="primary" onClick={handleAddContact}>
+                                            Agregar
+                                        </Button>
+                                    </Box>
+
+                                    <Typography variant="h6">Lista de Contactos</Typography>
+                                    <ul>
+                                        {contactos.map((contacto, index) => (
+                                            <li key={index}>
+                                                {`${contacto.contact_type === 'phone' ? 'Teléfono' : 'Correo'}: ${contacto.contact_value}`}
+                                                <Button onClick={() => handleDeleteContact(index)} color="secondary" sx={{ ml: 2 }}>
+                                                    Eliminar
+                                                </Button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </Box>
                             </DialogContent>
                             <DialogActions>
                                 <Button onClick={handleCloseDialog}>Cancelar</Button>

@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import "../login/Login.css"
+import { fetchData } from "./fetchDataLogin.js";
 import {
   Box,
   Typography,
@@ -10,7 +11,7 @@ import {
   Checkbox,
 } from "@mui/material";
 import Link from "next/link";
-
+import { useRouter } from "next/navigation"; 
 import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
 
 interface loginType {
@@ -19,7 +20,33 @@ interface loginType {
   subtext?: JSX.Element | JSX.Element[];
 }
 
-const AuthLogin = ({ title, subtitle, subtext }: loginType) => (
+const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter();
+
+  const handleLogin = async () => {
+    const data = {
+      username: username,
+      password: password,
+    };
+    try {
+      const response = await fetchData('http://localhost:9000/sit/login', data);
+      if (response.status === 200) { 
+        router.push('/');
+      } else {
+        console.error("Credenciales incorrectas");
+      }
+    } catch (error) {
+      console.error('Error al iniciar sesión:', error);
+    }
+  };
+
+  const handleForgotPassword = () => {
+     window.location.href ='authEmail';
+  };
+
+  return (
   <>
     {title ? (
       <Typography fontWeight="700" variant="h2" mb={1}>
@@ -42,7 +69,9 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => (
         </Typography>
         <br />
         <br />
-        <input className="input"/>
+        <input value={username} onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setUsername(e.target.value)} 
+        className="input"/>
+
       </Box>
       <Box mt="25px">
         <Typography
@@ -56,7 +85,9 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => (
         </Typography>
         <br />
         <br />
-        <input className="input" type="password"/>
+        <input value={password} onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setPassword(e.target.value)}
+        className="input" type="password"/>
+
       </Box>
       <Stack
         justifyContent="space-between"
@@ -67,10 +98,26 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => (
       </Stack>
     </Stack>
     <Box>
-      <Button className="btn" href="/"> Iniciar Sesión </Button>
+    <Button
+          className="btn"
+          onClick={handleLogin}  
+        >
+          Iniciar Sesión
+        </Button>
     </Box>
+
+    <Box mt="15px">
+        <Button
+          type="button" variant="text" color="primary" 
+          onClick={handleForgotPassword}  
+        >
+          ¿Olvidó su contraseña?
+        </Button>
+      </Box>
+
     {subtitle}
   </>
-);
+  );
+};
 
 export default AuthLogin;
