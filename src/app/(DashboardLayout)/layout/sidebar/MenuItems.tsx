@@ -1,4 +1,4 @@
-import { IconAccessibleOff, IconAccessibleOffFilled, IconPrescription, IconUser, IconUserBolt, IconUserDollar, IconUserEdit } from "@tabler/icons-react";
+import { IconAccessibleOff, IconAccessibleOffFilled, IconAlertOctagon, IconParachute, IconPrescription, IconUser, IconUserBolt, IconUserDollar, IconUserEdit } from "@tabler/icons-react";
 import {
   IconHome,
   IconBuilding,
@@ -48,7 +48,7 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
-    title: "Información Legal-Regulatoria",
+    title: "Info Legal-Regulatoria",
     icon: IconForms,
     href: "/crud-InfoLegalRegulatoria",
   },
@@ -57,6 +57,12 @@ const Menuitems = [
     title: "Educación Turística",
     icon: IconUserEdit,
     href: "/crud-EducacionTuristica",
+  },
+  {
+    id: uniqueId(),
+    title: "Zonas de Riesgo",
+    icon: IconAlertOctagon,
+    href: "/crud-zonasriesgo",
   },
 ];
 
