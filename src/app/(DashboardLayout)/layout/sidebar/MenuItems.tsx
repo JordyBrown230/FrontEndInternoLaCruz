@@ -1,4 +1,4 @@
-import { IconAccessibleOff, IconAccessibleOffFilled, IconPrescription, IconUserBolt, IconUserEdit } from "@tabler/icons-react";
+import { IconAccessibleOff, IconAccessibleOffFilled, IconPrescription, IconUser, IconUserBolt, IconUserDollar, IconUserEdit } from "@tabler/icons-react";
 import {
   IconHome,
   IconBuilding,
@@ -15,6 +15,12 @@ const Menuitems = [
   {
     navlabel: true,
     subheader: "Inicio",
+  },
+  {
+    id: uniqueId(),
+    title: "Crear User",
+    icon: IconUser,
+    href: "/crud-userU",
   },
   {
     id: uniqueId(),
@@ -51,12 +57,6 @@ const Menuitems = [
     title: "Educación Turística",
     icon: IconUserEdit,
     href: "/crud-EducacionTuristica",
-  },
-  {
-    id: uniqueId(),
-    title: "Accesibilidad",
-    icon: IconAccessible,
-    href: "/crud-accesibilidad",
   },
 ];
 
