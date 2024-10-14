@@ -28,10 +28,34 @@ const validationSchema = Yup.object({
 });
 
 const Municipalidad = () => {
-    useEffect(() => {
-        AOS.init();
-    }, []);
+    const fetchAttractions = async () => {
+        try {
+            const response = await fetch('http://localhost:9000/sit/info-legal-regulatoria/listar', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }); // Reemplaza con la URL de tu API
+            //console.log(await response.json())
+            if (!response.ok) {
+                throw new Error('Network response was not ok'); // Manejo de errores de red
+            }
+            const data = await response.json(); // Asume que la API devuelve un JSON
+            //setData(data); // Asigna los datos de la API al estado
+            setLegalInfos(data.data)
+            setFilteredLegalInfos(data.data)
+        } catch (error) {
+            console.error('Error fetching attractions:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
+        AOS.init(); fetchAttractions();
+    }, []);
+    const [loading, setLoading] = useState(true);
     const [legalInfos, setLegalInfos] = useState<LegalInfo[]>([]);
     const [filteredLegalInfos, setFilteredLegalInfos] = useState<LegalInfo[]>([]);
     const [openDialog, setOpenDialog] = useState(false);
@@ -49,7 +73,7 @@ const Municipalidad = () => {
         setOpenDeleteDialog(false);
     };
 
-    const handleSave = (values: Omit<LegalInfo, 'id'>) => {
+    const handleSave = async (values: Omit<LegalInfo, 'id'>) => {
         let updatedInfos;
         if (currentInfo) {
             // Actualizar información existente
@@ -58,7 +82,21 @@ const Municipalidad = () => {
             );
             toast.success('Información actualizada con éxito'); // Notificación de éxito
         } else {
+            console.log('hola')
             // Agregar nueva información
+            const response = await fetch('http://localhost:9000/sit/info-legal-regulatoria/agregar', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(values),
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al agregar el recurso');
+            }
+
             updatedInfos = [...legalInfos, { id: Date.now(), ...values }] as LegalInfo[];
             toast.success('Información agregada con éxito'); // Notificación de éxito
         }
@@ -67,12 +105,31 @@ const Municipalidad = () => {
         handleCloseDialog();
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (currentInfo) {
-            const updatedInfos = legalInfos.filter(info => info.id !== currentInfo.id);
-            setLegalInfos(updatedInfos);
-            setFilteredLegalInfos(updatedInfos);
-            toast.error('Información eliminada con éxito'); // Notificación de eliminación
+            try {
+                const response = await fetch('http://localhost:9000/sit/info-legal-regulatoria/eliminar/' + currentInfo.id, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                // Verifica si la respuesta fue exitosa
+                if (!response.ok) {
+                    throw new Error('Error al eliminar la información');
+                }
+                const updatedInfos = legalInfos.filter(info => info.id !== currentInfo.id);
+                setLegalInfos(updatedInfos);
+                setFilteredLegalInfos(updatedInfos);
+                toast.error('Información eliminada con éxito'); // Notificación de eliminación
+            } catch (error) {
+                console.error('Error al eliminar la información:', error);
+                toast.error('Hubo un problema al eliminar la información'); // Manejo del error
+            }
+
+
         }
         handleCloseDialog();
     };

@@ -55,7 +55,7 @@ const EducationTourism = () => {
         setOpenDeleteDialog(false);
     };
 
-    const handleSave = (values: Omit<EducationalResource, 'id'>) => {
+    const handleSave = async (values: Omit<EducationalResource, 'id'>) => {
         let updatedResources;
         if (currentResource) {
             updatedResources = educationalResources.map(resource =>
@@ -63,6 +63,18 @@ const EducationTourism = () => {
             );
             toast.success('Recurso actualizado con éxito');
         } else {
+            const response = await fetch('http://localhost:9000/sit//educacion-turistica/agregar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(values),
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al agregar el recurso');
+            }
+
             updatedResources = [...educationalResources, { id: Date.now(), ...values }] as EducationalResource[];
             toast.success('Recurso agregado con éxito');
         }
