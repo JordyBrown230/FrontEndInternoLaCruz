@@ -15,7 +15,7 @@ interface User {
   username: string;
   email: string;
   password: string;
-  Person:{
+  Person: {
     person_id: number;
     first_name: string,
     last_name: string,
@@ -39,9 +39,9 @@ const Municipalidad: React.FC = () => {
       }
       const data = await response.json(); // Asume que la API devuelve un JSON
       //setData(data); // Asigna los datos de la API al estado
-      console.log(data)
-      setUsers(data)
-     // setFormData(data)
+      console.log(data.users)
+      setUsers(data.users)
+      // setFormData(data)
     } catch (error) {
       console.error('Error fetching attractions:', error);
     } finally {
@@ -68,7 +68,7 @@ const Municipalidad: React.FC = () => {
       cedula: '',
     }
   });
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null); // Para seleccionar un solo usuario
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false); // Estado para el diálogo de confirmación
@@ -105,9 +105,9 @@ const Municipalidad: React.FC = () => {
       password: formData.password,
       email: formData.email,
       person: {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        cedula: formData.cedula
+        first_name: formData.Person.first_name,
+        last_name: formData.Person.last_name,
+        cedula: formData.Person.cedula
       }
     }
     try {
@@ -152,6 +152,7 @@ const Municipalidad: React.FC = () => {
           }
         });
         setSelectedUserId(null); // Limpiar selección
+        fetchAttractions()
       } else {
         console.error('Error creating or updating user');
       }
@@ -325,32 +326,35 @@ const Municipalidad: React.FC = () => {
               </Grid>
               <Grid container spacing={3}>
                 {users.length > 0 ? (
-                  users.map((user) => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={user.user_id}>
-                      <DashboardCard>
-                        <CardContent>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={selectedUserId === user.user_id}
-                                onChange={() => handleCheckboxChange(user.user_id)}
-                              />
-                            }
-                            label={`${user.Person.first_name} ${user.Person.last_name}`}
-                          />
-                          <Typography variant="body2" color="text.secondary">
-                            Cédula: {user.Person.cedula}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Usuario: {user.username}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Email: {user.email}
-                          </Typography>
-                        </CardContent>
-                      </DashboardCard>
-                    </Grid>
-                  ))
+                  users.map((user) => {
+                    const person = user.Person || {}; // Asigna un objeto vacío si es null
+                    return (
+                      <Grid item xs={12} sm={6} md={4} lg={3} key={user.user_id}>
+                        <DashboardCard>
+                          <CardContent>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={selectedUserId === user.user_id}
+                                  onChange={() => handleCheckboxChange(user.user_id)}
+                                />
+                              }
+                              label={`${person.first_name || 'N/A'} ${person.last_name || 'N/A'}`}
+                            />
+                            <Typography variant="body2" color="text.secondary">
+                              Cédula: {person.cedula || 'N/A'}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Usuario: {user.username || 'N/A'}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Email: {user.email || 'N/A'}
+                            </Typography>
+                          </CardContent>
+                        </DashboardCard>
+                      </Grid>
+                    );
+                  })
                 ) : (
                   <Typography variant="h6" textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
                     No hay usuarios registrados.
