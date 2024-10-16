@@ -15,12 +15,14 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
 } from '@mui/material';
 import { styled } from '@mui/system';
-import { createOrUpdateEstablecimiento, getEstablecimientos } from '@/services/establecimiento.service';
+import { createOrUpdateEstablecimiento, EstablecimientoData, getEstablecimientos } from '@/services/establecimiento.service';
 import { getPropietarios, createPropietario, Propietario } from '@/services/propietario.service';
 import { getCategorias, Categoria, createCategoria } from '@/services/categoria.service';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { Delete } from '@mui/icons-material';
 import { message } from 'antd';
 
 const FormContainer = styled(Container)(({ theme }) => ({
@@ -35,6 +37,7 @@ const EstablecimientoForm: React.FC = () => {
   const [idCategoria, setIdCategoria] = useState('');
   const [fotos, setFotos] = useState<File[]>([]);
   const [filePreview, setFilePreview] = useState<string[]>([]);
+  const [existingFotos, setExistingFotos] = useState<{ id: number; foto: string }[]>([]);
   const [propietarios, setPropietarios] = useState<Propietario[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [isCreatingPropietario, setIsCreatingPropietario] = useState(false);
@@ -101,7 +104,11 @@ const EstablecimientoForm: React.FC = () => {
     const newPreviews = allFiles.map((file) => URL.createObjectURL(file));
     setFilePreview(newPreviews);
   };
-  
+
+  const handleRemoveExistingFoto = (id: number) => {
+    setExistingFotos((prev) => prev.filter((foto) => foto.id !== id));
+  };
+
   const handleSubmitNewPropietario = async () => {
     if (!newPropietarioNombre || !newPropietarioTelefono || !newPropietarioCorreo) {
       message.error('Por favor, completa todos los campos del nuevo propietario.');
@@ -145,12 +152,16 @@ const EstablecimientoForm: React.FC = () => {
       const response = await getEstablecimientos();
       const establecimiento = response.find((est) => est.idEstablecimiento === parseInt(id));
       if (establecimiento) {
-        const { nombre, direccion, descripcion, propietario, categoria } = establecimiento;
+        const { nombre, direccion, descripcion, propietario, categoria, fotosEstablecimiento } = establecimiento;
         setNombre(nombre || '');
         setDireccion(direccion || '');
         setDescripcion(descripcion || '');
         setIdPropietario(propietario?.idPropietario ? propietario.idPropietario.toString() : '');
         setIdCategoria(categoria?.idCategoria ? categoria.idCategoria.toString() : '');
+        setExistingFotos(fotosEstablecimiento.map((foto) => ({
+          id: foto.idFoto,
+          foto: `data:image/jpeg;base64,${Buffer.from(foto.foto).toString('base64')}`,
+        })));
       }
     } catch (error) {
       message.error('Error al cargar el establecimiento.');
@@ -173,7 +184,8 @@ const EstablecimientoForm: React.FC = () => {
         idCategoria: parseInt(idCategoria, 10),
         idEstablecimiento: establecimientoId ? parseInt(establecimientoId, 10) : undefined,
         fotos,
-      });
+        existingFotosToKeep: existingFotos.map(f => f.id),
+      } as EstablecimientoData);
       message.success('Establecimiento guardado correctamente.');
       resetForm();
       router.push('/establecimientos');
@@ -190,6 +202,7 @@ const EstablecimientoForm: React.FC = () => {
     setIdCategoria('');
     setFotos([]);
     setFilePreview([]);
+    setExistingFotos([]);
   };
 
   return (
@@ -234,7 +247,7 @@ const EstablecimientoForm: React.FC = () => {
 
             {/* Select para Propietario */}
             <Grid item xs={12}>
-              <FormControl fullWidth required>
+              <FormControl fullWidth required disabled={isCreatingPropietario || isCreatingCategoria}>
                 <InputLabel>Propietario</InputLabel>
                 <Select
                   value={idPropietario}
@@ -290,7 +303,7 @@ const EstablecimientoForm: React.FC = () => {
 
             {/* Select para Categoría */}
             <Grid item xs={12}>
-              <FormControl fullWidth required>
+              <FormControl fullWidth required disabled={isCreatingPropietario || isCreatingCategoria}>
                 <InputLabel>Categoría</InputLabel>
                 <Select
                   value={idCategoria}
@@ -340,6 +353,25 @@ const EstablecimientoForm: React.FC = () => {
                   {filePreview.map((src, index) => (
                     <Grid item xs={4} key={index}>
                       <img src={src} alt={`preview-${index}`} style={{ width: '100%' }} />
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </Grid>
+
+            {/* Existing Photos */}
+            <Grid item xs={12}>
+              {existingFotos.length > 0 && (
+                <Grid container spacing={2} mt={2}>
+                  {existingFotos.map((foto) => (
+                    <Grid item xs={4} key={foto.id} style={{ position: 'relative' }}>
+                      <img src={foto.foto} alt={`existing-${foto.id}`} style={{ width: '100%' }} />
+                      <IconButton
+                        onClick={() => handleRemoveExistingFoto(foto.id)}
+                        style={{ position: 'absolute', top: 0, right: 0 }}
+                      >
+                        <Delete />
+                      </IconButton>
                     </Grid>
                   ))}
                 </Grid>

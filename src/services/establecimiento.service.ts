@@ -28,6 +28,17 @@ export interface Establecimiento {
   fotosEstablecimiento: Foto[];
 }
 
+export interface EstablecimientoData {
+  nombre: string;
+  direccion: string;
+  descripcion: string;
+  idPropietario: number;
+  idCategoria: number;
+  idEstablecimiento?: number;
+  fotos?: File[];
+  existingFotosToKeep?: number[]; // IDs of existing photos to retain when updating
+}
+
 export const getEstablecimientos = async (): Promise<Establecimiento[]> => {
   try {
     const response = await axiosApi.get<Establecimiento[]>('/establecimientos');
@@ -57,23 +68,21 @@ export const createOrUpdateEstablecimiento = async (
     idCategoria: number;
     idEstablecimiento?: number; // Optional for update
     fotos?: File[]; 
+    existingFotosToKeep?: number[]; // Agregar esta propiedad
   }
 ): Promise<any> => {
   const formData = new FormData();
 
-  // Append the establishment details to the form data
   formData.append('nombre', establecimientoData.nombre);
   formData.append('direccion', establecimientoData.direccion);
   formData.append('descripcion', establecimientoData.descripcion);
-  formData.append('idPropietario', String(establecimientoData.idPropietario)); // Use the actual ID now
-  formData.append('idCategoria', String(establecimientoData.idCategoria));     // Use the actual ID now
+  formData.append('idPropietario', String(establecimientoData.idPropietario)); 
+  formData.append('idCategoria', String(establecimientoData.idCategoria));    
 
-  // If updating, include the idEstablecimiento
   if (establecimientoData.idEstablecimiento) {
     formData.append('idEstablecimiento', String(establecimientoData.idEstablecimiento));
   }
 
-  // Append the photos, if provided
   if (establecimientoData.fotos) {
     Array.from(establecimientoData.fotos).forEach((file) => {
       formData.append('fotos', file);
@@ -81,11 +90,7 @@ export const createOrUpdateEstablecimiento = async (
   }
 
   try {
-    // If idEstablecimiento is provided, it's an update, otherwise it's a create
-    const response = establecimientoData.idEstablecimiento
-      ? await axiosApi.put(`/establecimientos/${establecimientoData.idEstablecimiento}`, formData)
-      : await axiosApi.post('/establecimientos', formData);
-
+    const response = await axiosApi.post('/establecimientos', formData);
     return response.data;
   } catch (error) {
     console.error('Error creating/updating establecimiento:', error);
