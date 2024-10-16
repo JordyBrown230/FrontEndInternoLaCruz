@@ -62,7 +62,8 @@ const EstablecimientosList: React.FC = () => {
 
     const filtered = establecimientos.filter(establecimiento =>
       establecimiento.nombre.toLowerCase().includes(query) ||
-      establecimiento.direccion.toLowerCase().includes(query)
+      establecimiento.direccion.toLowerCase().includes(query)||
+      establecimiento.descripcion.toLowerCase().includes(query)
     );
     setFilteredEstablecimientos(filtered);
   };
@@ -136,7 +137,7 @@ const EstablecimientosList: React.FC = () => {
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 2, 
+          gap: 2,
           mb: 4
         }}
       >
@@ -162,61 +163,54 @@ const EstablecimientosList: React.FC = () => {
       {!loading && filteredEstablecimientos.length > 0 && (
         <Grid container spacing={3}>
           {filteredEstablecimientos.map((establecimiento, idx) => (
-            <Grid item xs={12} md={6} key={establecimiento.idEstablecimiento}>
-              <Paper elevation={3} style={{ padding: '20px', position: 'relative' }}>
-                <Typography variant="h6">{establecimiento.nombre}</Typography>
-                <Typography variant="body2">{establecimiento.direccion}</Typography>
-                <Typography variant="body2">
-                  Propietario: {establecimiento.propietario.nombre}
-                </Typography>
-                <Typography variant="body2">
-                  Categoría: {establecimiento.categoria.nombre}
-                </Typography>
-
+            <Grid item xs={12} md={6} lg={4} key={establecimiento.idEstablecimiento}>
+              <Paper elevation={3} style={{
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: '12px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                display: 'flex',
+                flexDirection: 'column',
+                height: '400px',
+              }}>
                 {establecimiento.fotosEstablecimiento && establecimiento.fotosEstablecimiento.length > 0 ? (
-                  <Box position="relative" sx={{ mt: 2 }}>
+                  <Box style={{ height: '200px', overflow: 'hidden' }}>
                     <img
                       src={`data:image/jpeg;base64,${Buffer.from(
                         establecimiento.fotosEstablecimiento[currentIndex[idx] || 0].foto
                       ).toString('base64')}`}
                       alt="Establecimiento"
-                      style={{ width: '100%', borderRadius: '8px', cursor: 'pointer' }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
                       onClick={() => openImageModal(idx, establecimiento)}
                     />
-                    <IconButton
-                      sx={{ position: 'absolute', top: '50%', left: 0, transform: 'translateY(-50%)' }}
-                      onClick={() => handlePrevious(idx)}
-                    >
-                      <ArrowBackIos />
-                    </IconButton>
-                    <IconButton
-                      sx={{ position: 'absolute', top: '50%', right: 0, transform: 'translateY(-50%)' }}
-                      onClick={() => handleNext(idx, establecimiento.fotosEstablecimiento.length)}
-                    >
-                      <ArrowForwardIos />
-                    </IconButton>
                   </Box>
                 ) : (
-                  <Typography variant="body2" mt={2} color="textSecondary">
+                  <Typography variant="body2" mt={2} color="textSecondary" textAlign="center">
                     No hay fotos disponibles
                   </Typography>
                 )}
 
-                <Link href={`/guardar-establecimiento?id=${establecimiento.idEstablecimiento}`} passHref>
-                  <IconButton
-                    color="primary"
-                    style={{ position: 'absolute', top: '10px', right: '50px' }}
-                  >
-                    <Edit />
-                  </IconButton>
-                </Link>
-                <IconButton
-                  color="secondary"
-                  style={{ position: 'absolute', top: '10px', right: '10px' }}
-                  onClick={() => openDeleteDialog(establecimiento.idEstablecimiento)}
-                >
-                  <Delete />
-                </IconButton>
+                <Box sx={{ padding: '16px', flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <Typography variant="h5" noWrap>{establecimiento.nombre}</Typography>
+                    <Typography variant="body2" color="textSecondary" mt={1} noWrap>{establecimiento.descripcion}</Typography>
+                    <Typography variant="body2" color="textSecondary" mt={1} noWrap>Propietario: {establecimiento.propietario.nombre}</Typography>
+                    <Typography variant="body2" color="textSecondary" mt={1} noWrap>Categoría: {establecimiento.categoria.nombre}</Typography>
+                  </div>
+                  <Box style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+                    <Link href={`/guardar-establecimiento?id=${establecimiento.idEstablecimiento}`} passHref>
+                      <IconButton color="primary">
+                        <Edit />
+                      </IconButton>
+                    </Link>
+                    <IconButton
+                      color="secondary"
+                      onClick={() => openDeleteDialog(establecimiento.idEstablecimiento)}
+                    >
+                      <Delete />
+                    </IconButton>
+                  </Box>
+                </Box>
               </Paper>
             </Grid>
           ))}
