@@ -4,6 +4,7 @@ import { Typography, Container, Grid, Paper, IconButton, Box, Modal, Button, Dia
 import { Delete, Edit, ArrowBackIos, ArrowForwardIos, Close } from '@mui/icons-material';
 import Aos from 'aos';
 import 'aos/dist/aos.css';
+import Link from 'next/link';
 import { Establecimiento, getEstablecimientos, deleteEstablecimiento } from '@/services/establecimiento.service';
 
 const EstablecimientosList: React.FC = () => {
@@ -155,13 +156,14 @@ const EstablecimientosList: React.FC = () => {
                   </Typography>
                 )}
 
-                <IconButton
-                  color="primary"
-                  style={{ position: 'absolute', top: '10px', right: '50px' }}
-                  onClick={() => console.log('Editar', establecimiento.idEstablecimiento)}
-                >
-                  <Edit />
-                </IconButton>
+                <Link href={`/agregar-establecimiento?id=${establecimiento.idEstablecimiento}`} passHref>
+                  <IconButton
+                    color="primary"
+                    style={{ position: 'absolute', top: '10px', right: '50px' }}
+                  >
+                    <Edit />
+                  </IconButton>
+                </Link>
                 <IconButton
                   color="secondary"
                   style={{ position: 'absolute', top: '10px', right: '10px' }}

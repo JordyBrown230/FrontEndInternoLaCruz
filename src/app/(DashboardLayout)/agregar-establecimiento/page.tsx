@@ -1,5 +1,4 @@
 'use client';
-'use client';
 import { useState, useEffect } from 'react';
 import {
   TextField,
@@ -21,18 +20,14 @@ import { styled } from '@mui/system';
 import { createOrUpdateEstablecimiento, getEstablecimientos } from '@/services/establecimiento.service';
 import { getPropietarios, createPropietario, Propietario } from '@/services/propietario.service';
 import { getCategorias, Categoria, createCategoria } from '@/services/categoria.service';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { message } from 'antd';
-
-interface EstablecimientoFormProps {
-  establecimientoId?: number;
-  onSuccess?: () => void;
-}
 
 const FormContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(5),
 }));
 
-const EstablecimientoForm: React.FC<EstablecimientoFormProps> = ({ establecimientoId, onSuccess = () => { } }) => {
+const EstablecimientoForm: React.FC = () => {
   const [nombre, setNombre] = useState('');
   const [direccion, setDireccion] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -49,11 +44,15 @@ const EstablecimientoForm: React.FC<EstablecimientoFormProps> = ({ establecimien
   const [isCreatingCategoria, setIsCreatingCategoria] = useState(false);
   const [newCategoriaNombre, setNewCategoriaNombre] = useState('');
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const establecimientoId = searchParams.get("id");
+
   useEffect(() => {
     fetchPropietarios();
     fetchCategorias();
     if (establecimientoId) {
-      loadEstablecimientoData();
+      loadEstablecimientoData(establecimientoId);
     }
   }, [establecimientoId]);
 
@@ -86,6 +85,15 @@ const EstablecimientoForm: React.FC<EstablecimientoFormProps> = ({ establecimien
     setNewPropietarioCorreo('');
   };
 
+  const handleCreateCategoria = () => {
+    setIsCreatingCategoria(true);
+  };
+
+  const handleCancelCreateCategoria = () => {
+    setIsCreatingCategoria(false);
+    setNewCategoriaNombre('');
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFiles = e.target.files ? Array.from(e.target.files) : [];
     const allFiles = [...fotos, ...newFiles].slice(0, 5);
@@ -115,15 +123,6 @@ const EstablecimientoForm: React.FC<EstablecimientoFormProps> = ({ establecimien
     }
   };
 
-  const handleCreateCategoria = () => {
-    setIsCreatingCategoria(true);
-  };
-
-  const handleCancelCreateCategoria = () => {
-    setIsCreatingCategoria(false);
-    setNewCategoriaNombre('');
-  };
-
   const handleSubmitNewCategoria = async () => {
     if (!newCategoriaNombre) {
       message.error('El nombre de la categoría no puede estar vacío.');
@@ -141,10 +140,10 @@ const EstablecimientoForm: React.FC<EstablecimientoFormProps> = ({ establecimien
     }
   };
 
-  const loadEstablecimientoData = async () => {
+  const loadEstablecimientoData = async (id: string) => {
     try {
       const response = await getEstablecimientos();
-      const establecimiento = response.find((est) => est.idEstablecimiento === establecimientoId);
+      const establecimiento = response.find((est) => est.idEstablecimiento === parseInt(id));
       if (establecimiento) {
         const { nombre, direccion, descripcion, propietario, categoria } = establecimiento;
         setNombre(nombre || '');
@@ -172,12 +171,12 @@ const EstablecimientoForm: React.FC<EstablecimientoFormProps> = ({ establecimien
         descripcion,
         idPropietario: parseInt(idPropietario, 10),
         idCategoria: parseInt(idCategoria, 10),
-        idEstablecimiento: establecimientoId,
+        idEstablecimiento: establecimientoId ? parseInt(establecimientoId, 10) : undefined,
         fotos,
       });
       message.success('Establecimiento guardado correctamente.');
       resetForm();
-      onSuccess();
+      router.push('/establecimientos');
     } catch (error: any) {
       message.error(`Ocurrió un error al guardar el establecimiento: ${error.message}`);
     }
@@ -235,13 +234,19 @@ const EstablecimientoForm: React.FC<EstablecimientoFormProps> = ({ establecimien
 
             {/* Select para Propietario */}
             <Grid item xs={12}>
-              <FormControl fullWidth required disabled={isCreatingPropietario || isCreatingCategoria}>
+              <FormControl fullWidth required>
                 <InputLabel>Propietario</InputLabel>
                 <Select
                   value={idPropietario}
-                  onChange={(e) => setIdPropietario(e.target.value as string)}
+                  onChange={(e) => {
+                    if (e.target.value === 'create') {
+                      handleCreatePropietario();
+                    } else {
+                      setIdPropietario(e.target.value as string);
+                    }
+                  }}
                 >
-                  <MenuItem onClick={handleCreatePropietario}>+ Crear nuevo propietario</MenuItem>
+                  <MenuItem value="create">+ Crear nuevo propietario</MenuItem>
                   {propietarios.map((propietario) => (
                     <MenuItem key={propietario.idPropietario} value={propietario.idPropietario}>
                       {propietario.nombre}
@@ -285,13 +290,19 @@ const EstablecimientoForm: React.FC<EstablecimientoFormProps> = ({ establecimien
 
             {/* Select para Categoría */}
             <Grid item xs={12}>
-              <FormControl fullWidth required disabled={isCreatingPropietario || isCreatingCategoria}>
+              <FormControl fullWidth required>
                 <InputLabel>Categoría</InputLabel>
                 <Select
                   value={idCategoria}
-                  onChange={(e) => setIdCategoria(e.target.value as string)}
+                  onChange={(e) => {
+                    if (e.target.value === 'create') {
+                      handleCreateCategoria();
+                    } else {
+                      setIdCategoria(e.target.value as string);
+                    }
+                  }}
                 >
-                  <MenuItem onClick={handleCreateCategoria}>+ Crear nueva categoría</MenuItem>
+                  <MenuItem value="create">+ Crear nueva categoría</MenuItem>
                   {categorias.map((categoria) => (
                     <MenuItem key={categoria.idCategoria} value={categoria.idCategoria}>
                       {categoria.nombre}
@@ -318,8 +329,8 @@ const EstablecimientoForm: React.FC<EstablecimientoFormProps> = ({ establecimien
               </DialogActions>
             </Dialog>
 
-                       {/* File upload */}
-                       <Grid item xs={12}>
+            {/* File upload */}
+            <Grid item xs={12}>
               <Button variant="contained" component="label">
                 Subir Fotos ({fotos ? fotos.length : 0} archivos seleccionados)
                 <input type="file" hidden multiple onChange={handleFileChange} />
@@ -349,5 +360,3 @@ const EstablecimientoForm: React.FC<EstablecimientoFormProps> = ({ establecimien
 };
 
 export default EstablecimientoForm;
-
-
