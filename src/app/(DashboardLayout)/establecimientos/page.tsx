@@ -118,7 +118,7 @@ const EstablecimientosList: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         Lista de Establecimientos
       </Typography>
-      <Link href='/agregar-establecimiento' passHref>
+      <Link href='/guardar-establecimiento' passHref>
         <Button variant='contained' style={{ marginBottom: '10px' }}>
           Agregar
         </Button>
@@ -170,7 +170,7 @@ const EstablecimientosList: React.FC = () => {
                   </Typography>
                 )}
 
-                <Link href={`/agregar-establecimiento?id=${establecimiento.idEstablecimiento}`} passHref>
+                <Link href={`/guardar-establecimiento?id=${establecimiento.idEstablecimiento}`} passHref>
                   <IconButton
                     color="primary"
                     style={{ position: 'absolute', top: '10px', right: '50px' }}
