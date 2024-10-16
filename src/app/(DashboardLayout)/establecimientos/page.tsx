@@ -1,7 +1,7 @@
-'use client'
-import { useState, useEffect } from 'react';
-import { Typography, Container, Grid, Paper, IconButton, Box, Modal, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { Delete, Edit, ArrowBackIos, ArrowForwardIos, Close } from '@mui/icons-material';
+'use client';
+import React, { useState, useEffect, ChangeEvent } from 'react';
+import { Typography, Container, Grid, Paper, IconButton, Box, Modal, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
+import { Delete, Edit, ArrowBackIos, ArrowForwardIos, Close, Search as SearchIcon } from '@mui/icons-material';
 import Aos from 'aos';
 import 'aos/dist/aos.css';
 import Link from 'next/link';
@@ -10,6 +10,7 @@ import { message } from 'antd';
 
 const EstablecimientosList: React.FC = () => {
   const [establecimientos, setEstablecimientos] = useState<Establecimiento[]>([]);
+  const [filteredEstablecimientos, setFilteredEstablecimientos] = useState<Establecimiento[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -19,6 +20,7 @@ const EstablecimientosList: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     Aos.init({ duration: 1000 });
@@ -42,6 +44,7 @@ const EstablecimientosList: React.FC = () => {
       setLoading(true);
       const data = await getEstablecimientos();
       setEstablecimientos(data);
+      setFilteredEstablecimientos(data); // Inicializa el estado filtrado con todos los datos
 
       const initialIndices = data.map(() => 0);
       setCurrentIndex(initialIndices);
@@ -51,6 +54,17 @@ const EstablecimientosList: React.FC = () => {
       setError('Error al cargar los establecimientos.');
       setLoading(false);
     }
+  };
+
+  const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
+    const query = event.target.value.toLowerCase();
+    setSearchQuery(query);
+
+    const filtered = establecimientos.filter(establecimiento =>
+      establecimiento.nombre.toLowerCase().includes(query) ||
+      establecimiento.direccion.toLowerCase().includes(query)
+    );
+    setFilteredEstablecimientos(filtered);
   };
 
   const handleDelete = async () => {
@@ -118,17 +132,36 @@ const EstablecimientosList: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         Lista de Establecimientos
       </Typography>
-      <Link href='/guardar-establecimiento' passHref>
-        <Button variant='contained' style={{ marginBottom: '10px' }}>
-          Agregar
-        </Button>
-      </Link>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2, 
+          mb: 4
+        }}
+      >
+        <Link href='/guardar-establecimiento' passHref>
+          <Button variant='contained'>
+            Agregar
+          </Button>
+        </Link>
+        <TextField
+          label="Buscar"
+          variant="outlined"
+          onChange={handleSearch}
+          value={searchQuery}
+          sx={{ maxWidth: 400 }}
+          InputProps={{
+            endAdornment: <SearchIcon />,
+          }}
+        />
+      </Box>
+
       {loading && <Typography variant="h6" color="textSecondary">Cargando establecimientos...</Typography>}
 
-      {/* Establishments List */}
-      {!loading && establecimientos.length > 0 && (
+      {!loading && filteredEstablecimientos.length > 0 && (
         <Grid container spacing={3}>
-          {establecimientos.map((establecimiento, idx) => (
+          {filteredEstablecimientos.map((establecimiento, idx) => (
             <Grid item xs={12} md={6} key={establecimiento.idEstablecimiento}>
               <Paper elevation={3} style={{ padding: '20px', position: 'relative' }}>
                 <Typography variant="h6">{establecimiento.nombre}</Typography>
@@ -140,7 +173,6 @@ const EstablecimientosList: React.FC = () => {
                   Categoría: {establecimiento.categoria.nombre}
                 </Typography>
 
-                {/* Carrusel de fotos del establecimiento */}
                 {establecimiento.fotosEstablecimiento && establecimiento.fotosEstablecimiento.length > 0 ? (
                   <Box position="relative" sx={{ mt: 2 }}>
                     <img
@@ -191,7 +223,6 @@ const EstablecimientosList: React.FC = () => {
         </Grid>
       )}
 
-      {/* Modal para mostrar la imagen en grande con navegación */}
       <Modal open={modalOpen} onClose={closeImageModal}>
         <Box
           sx={{
