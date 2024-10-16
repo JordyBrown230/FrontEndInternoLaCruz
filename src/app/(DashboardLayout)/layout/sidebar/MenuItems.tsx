@@ -12,9 +12,9 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
-    title: "CRUD Empresas",
+    title: "Establecimientos",
     icon: IconBuilding,
-    href: "/crud-empresas",
+    href: "/establecimientos",
   },
 ];
 
