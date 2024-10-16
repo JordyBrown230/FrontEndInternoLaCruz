@@ -1,4 +1,4 @@
-'use client';
+'use client'
 import { useState, useEffect } from 'react';
 import { Typography, Container, Grid, Paper, IconButton, Box, Modal, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { Delete, Edit, ArrowBackIos, ArrowForwardIos, Close } from '@mui/icons-material';
@@ -6,6 +6,7 @@ import Aos from 'aos';
 import 'aos/dist/aos.css';
 import Link from 'next/link';
 import { Establecimiento, getEstablecimientos, deleteEstablecimiento } from '@/services/establecimiento.service';
+import { message } from 'antd';
 
 const EstablecimientosList: React.FC = () => {
   const [establecimientos, setEstablecimientos] = useState<Establecimiento[]>([]);
@@ -23,6 +24,18 @@ const EstablecimientosList: React.FC = () => {
     Aos.init({ duration: 1000 });
     fetchEstablecimientos();
   }, []);
+
+  useEffect(() => {
+    if (successMessage) {
+      message.success(successMessage);
+      setSuccessMessage('');
+    }
+
+    if (error) {
+      message.error(error);
+      setError('');
+    }
+  }, [successMessage, error]);
 
   const fetchEstablecimientos = async () => {
     try {
@@ -88,7 +101,7 @@ const EstablecimientosList: React.FC = () => {
 
   const handleModalNext = () => {
     if (selectedImageIndex !== null && currentEstablecimiento) {
-      setSelectedImageIndex((prevIndex:any) =>
+      setSelectedImageIndex((prevIndex: any) =>
         prevIndex < currentEstablecimiento.fotosEstablecimiento.length - 1 ? prevIndex + 1 : prevIndex
       );
     }
@@ -96,7 +109,7 @@ const EstablecimientosList: React.FC = () => {
 
   const handleModalPrevious = () => {
     if (selectedImageIndex !== null) {
-      setSelectedImageIndex((prevIndex:any) => (prevIndex > 0 ? prevIndex - 1 : prevIndex));
+      setSelectedImageIndex((prevIndex: any) => (prevIndex > 0 ? prevIndex - 1 : prevIndex));
     }
   };
 
@@ -105,11 +118,12 @@ const EstablecimientosList: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         Lista de Establecimientos
       </Typography>
-      <Button variant='contained' style={{marginBottom:'10px'}} href='/agregar-establecimiento'>Agregar</Button>
+      <Link href='/agregar-establecimiento' passHref>
+        <Button variant='contained' style={{ marginBottom: '10px' }}>
+          Agregar
+        </Button>
+      </Link>
       {loading && <Typography variant="h6" color="textSecondary">Cargando establecimientos...</Typography>}
-
-      {successMessage && <Typography color="primary">{successMessage}</Typography>}
-      {error && <Typography color="error">{error}</Typography>}
 
       {/* Establishments List */}
       {!loading && establecimientos.length > 0 && (
