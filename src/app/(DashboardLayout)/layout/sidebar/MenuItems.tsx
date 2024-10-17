@@ -1,4 +1,4 @@
-import { IconAccessibleOff, IconAccessibleOffFilled, IconAlertOctagon, IconParachute, IconPrescription, IconUser, IconUserBolt, IconUserDollar, IconUserEdit } from "@tabler/icons-react";
+import { IconAccessibleOff, IconAccessibleOffFilled, IconAlertOctagon, IconBone, IconCursorText, IconParachute, IconPrescription, IconUser, IconUserBolt, IconUserDollar, IconUserEdit } from "@tabler/icons-react";
 import {
   IconHome,
   IconBuilding,
@@ -63,6 +63,12 @@ const Menuitems = [
     title: "Zonas de Riesgo",
     icon: IconAlertOctagon,
     href: "/crud-zonasriesgo",
+  },
+  {
+    id: uniqueId(),
+    title: "Sitios Arqueológicos",
+    icon: IconBone,
+    href: "/crud-sitiosarqueologicos",
   },
 ];
 
