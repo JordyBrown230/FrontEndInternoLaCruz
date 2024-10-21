@@ -48,13 +48,13 @@ const Municipalidad = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            }); // Reemplaza con la URL de tu API
+            }); 
             //console.log(await response.json())
             if (!response.ok) {
-                throw new Error('Network response was not ok'); // Manejo de errores de red
+                throw new Error('Network response was not ok'); 
             }
-            const data = await response.json(); // Asume que la API devuelve un JSON
-            //setData(data); // Asigna los datos de la API al estado
+            const data = await response.json(); 
+            //setData(data);
             setTransportInfos(data.data)
             setFilteredTransportInfos(data.data)
         } catch (error) {

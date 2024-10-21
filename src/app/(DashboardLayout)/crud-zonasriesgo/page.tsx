@@ -32,7 +32,7 @@ const validationSchema = Yup.object({
 const Municipalidad = () => {
     const fetchRiskZones = async () => {
         try {
-            const response = await fetch('http://localhost:9000/sit/zonas-de-riesgo/listar', {
+            const response = await fetch('http://localhost:9000/sit/zona-riesgo/listar', {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -43,6 +43,7 @@ const Municipalidad = () => {
                 throw new Error('Network response was not ok'); 
             }
             const data = await response.json(); 
+            console.log(data)
             setRiskZones(data.data);
             setFilteredRiskZones(data.data);
         } catch (error) {
@@ -83,7 +84,7 @@ const Municipalidad = () => {
             toast.success('Zona de riesgo actualizada con éxito');
         } else {
             // Agregar nueva zona
-            const response = await fetch('http://localhost:9000/sit/zonas-de-riesgo/agregar', {
+            const response = await fetch('http://localhost:9000/sit/zona-riesgo/agregar', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -107,7 +108,7 @@ const Municipalidad = () => {
     const handleDelete = async () => {
         if (currentZone) {
             try {
-                const response = await fetch('http://localhost:9000/sit/zonas-de-riesgo/eliminar/' + currentZone.id, {
+                const response = await fetch('http://localhost:9000/sit/zona-riesgo/eliminar/' + currentZone.id, {
                     method: 'DELETE',
                     credentials: 'include',
                     headers: {

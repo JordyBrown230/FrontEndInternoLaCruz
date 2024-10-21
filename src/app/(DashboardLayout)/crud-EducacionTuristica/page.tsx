@@ -34,8 +34,35 @@ const validationSchema = Yup.object({
 });
 
 const EducationTourism = () => {
+    const fetchEdu = async () => {
+        try {
+            const response = await fetch('http://localhost:9000/sit/educacion-turistica/listar', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+    
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+    
+            const data = await response.json();
+            const resources = data.data.map((item: any) => ({
+                ...item,
+                authors: Array.isArray(item.authors) ? item.authors : [], // Asegúrate de que sea un array
+            }));
+    
+            setEducationalResources(resources);
+            setFilteredResources(resources);
+        } catch (error) {
+            console.error('Error fetching attractions:', error);
+        }
+    };    
+
     useEffect(() => {
-        AOS.init();
+        AOS.init(); fetchEdu();
     }, []);
 
     const [educationalResources, setEducationalResources] = useState<EducationalResource[]>([]);
@@ -54,7 +81,7 @@ const EducationTourism = () => {
         setOpenDialog(false);
         setOpenDeleteDialog(false);
     };
-
+    
     const handleSave = async (values: Omit<EducationalResource, 'id'>) => {
         let updatedResources;
         if (currentResource) {
@@ -65,6 +92,7 @@ const EducationTourism = () => {
         } else {
             const response = await fetch('http://localhost:9000/sit//educacion-turistica/agregar', {
                 method: 'POST',
+                credentials: 'include', 
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -83,9 +111,22 @@ const EducationTourism = () => {
         handleCloseDialog();
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (currentResource) {
+            const response = await fetch(`http://localhost:9000/sit/educacion-turistica/eliminar/${currentResource.id}`, {
+                method: 'DELETE',
+                credentials: 'include', 
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+        
+            if (!response.ok) {
+                throw new Error('Error al eliminar el recurso');
+            }
+
             const updatedResources = educationalResources.filter(resource => resource.id !== currentResource.id);
+            fetchEdu()
             setEducationalResources(updatedResources);
             setFilteredResources(updatedResources);
             toast.error('Recurso eliminado con éxito');

@@ -24,7 +24,7 @@ interface LegalInfo {
 const validationSchema = Yup.object({
     title: Yup.string().required('Título es obligatorio'),
     description: Yup.string().required('Descripción es obligatoria'),
-    website: Yup.string().url('URL inválida').notRequired(), // Validación opcional para el sitio web
+    website: Yup.string().url('URL inválida').notRequired(), 
 });
 
 const Municipalidad = () => {
@@ -36,13 +36,13 @@ const Municipalidad = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            }); // Reemplaza con la URL de tu API
+            }); 
             //console.log(await response.json())
             if (!response.ok) {
                 throw new Error('Network response was not ok'); // Manejo de errores de red
             }
-            const data = await response.json(); // Asume que la API devuelve un JSON
-            //setData(data); // Asigna los datos de la API al estado
+            const data = await response.json(); 
+            //setData(data); 
             setLegalInfos(data.data)
             setFilteredLegalInfos(data.data)
         } catch (error) {
@@ -76,7 +76,7 @@ const Municipalidad = () => {
     const handleSave = async (values: Omit<LegalInfo, 'id'>) => {
         let updatedInfos;
         if (currentInfo) {
-            // Actualizar información existente
+
             updatedInfos = legalInfos.map(info =>
                 info.id === currentInfo.id ? { ...info, ...values } : info
             );

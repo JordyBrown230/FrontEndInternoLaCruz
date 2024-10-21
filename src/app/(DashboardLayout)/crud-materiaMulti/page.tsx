@@ -16,6 +16,31 @@ interface FileType {
 }
 
 const Municipalidad: React.FC = () => {
+    const fetchMulti = async () => {
+        try {
+            const response = await fetch('http://localhost:9000/sit/multimedia/listar', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }); 
+            //console.log(await response.json())
+            if (!response.ok) {
+                throw new Error('Network response was not ok'); // Manejo de errores de red
+            }
+            const data = await response.json(); 
+           setFiles(data.data)
+           // setFilter(data)
+        } catch (error) {
+            console.error('Error fetching attractions:', error);
+        } finally {
+
+        }
+    };
+
+
+
     const [files, setFiles] = useState<FileType[]>([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
@@ -34,7 +59,7 @@ const Municipalidad: React.FC = () => {
         }
     };
 
-    const handleAddFile = () => {
+    const handleAddFile = async () => {
         if (selectedFile) {
             const url = URL.createObjectURL(selectedFile);
             const newFile = {
@@ -45,6 +70,44 @@ const Municipalidad: React.FC = () => {
                 description: newDescription,
                 type: selectedFile.type,
             };
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('title', newFile.title);
+            formData.append('description', newFile.description);
+            formData.append('name', newFile.name);
+            formData.append('type', newFile.type);
+            formData.append('url', newFile.url);
+            for (let pair of formData.entries()) {
+                console.log(`${pair[0]}:`, pair[1]);
+            }
+            console.log(selectedFile)
+            console.log(newFile)
+
+            console.log(formData);
+            try {
+                const response = await fetch('http://localhost:9000/sit/multimedia/agregar', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include',
+                });
+        
+                if (!response.ok) {
+                    throw new Error('Error al agregar el archivo');
+                }
+        
+                const data = await response.json();
+                console.log(data.data)
+                fetchMulti();
+                setFiles(data.data); 
+                toast.success('Archivo agregado exitosamente!');
+
+            } catch (error) {
+                console.error('Error adding file:', error);
+                toast.error('Error al agregar el archivo');
+            }
+
+
             setFiles((prevFiles) => [...prevFiles, newFile]);
             resetForm();
             toast.success('Archivo agregado exitosamente!');
@@ -68,10 +131,24 @@ const Municipalidad: React.FC = () => {
         document.body.removeChild(link);
     };
 
-    const deleteFile = (index: number) => {
-        setFiles(files.filter((_, i) => i !== index));
-        setOpenConfirmDialog(false);
-        toast.success('Archivo eliminado exitosamente!');
+    const deleteFile = async (index: number) => {
+        try {
+            const response = await fetch(`http://localhost:9000/sit/multimedia/eliminar/${index}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+    
+            if (!response.ok) {
+                throw new Error('Error al eliminar el archivo');
+            }
+            fetchMulti();
+            setFiles(files.filter((_, i) => i !== index));
+            setOpenConfirmDialog(false);
+            toast.success('Archivo eliminado exitosamente!');
+        } catch (error) {
+            console.error('Error deleting file:', error);
+            toast.error('Error al eliminar el archivo');
+        }
     };
 
     const openEditDialog = (index: number) => {
@@ -83,7 +160,7 @@ const Municipalidad: React.FC = () => {
     };
 
     const handleEdit = () => {
-        if (currentFileIndex !== null) {
+        if (currentFileIndex !== null) {         
             const updatedFiles = [...files];
             updatedFiles[currentFileIndex] = {
                 ...updatedFiles[currentFileIndex],
@@ -98,7 +175,7 @@ const Municipalidad: React.FC = () => {
     };
 
     useEffect(() => {
-        AOS.init();
+        AOS.init(); fetchMulti()
     }, []);
 
     const filteredFiles = files.filter((file) => {
@@ -149,8 +226,8 @@ const Municipalidad: React.FC = () => {
 
             {/* Lista de archivos */}
             <Grid container spacing={2} mt={2}>
-                {filteredFiles.map((file, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={index}>
+                {filteredFiles.map((file) => (
+                    <Grid item xs={12} sm={6} md={4} key={file.id}>
                         <Card>
                             {file.type.startsWith('image/') ? (
                                 <CardMedia
@@ -175,11 +252,11 @@ const Municipalidad: React.FC = () => {
                                 <Button variant="contained" color="primary" onClick={() => downloadFile(file)}>
                                     Descargar
                                 </Button>
-                                <Button variant="contained" color="secondary" onClick={() => openEditDialog(index)} sx={{ ml: 1 }}>
+                                <Button variant="contained" color="secondary" onClick={() => openEditDialog(file.id)} sx={{ ml: 1 }}>
                                     Editar
                                 </Button>
                                 <Button variant="contained" color="error" onClick={() => {
-                                    setCurrentFileIndex(index);
+                                    setCurrentFileIndex(file.id);
                                     setOpenConfirmDialog(true);
                                 }} sx={{ ml: 1 }}>
                                     Eliminar
