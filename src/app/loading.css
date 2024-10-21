@@ -1,32 +1,49 @@
 .loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh; /* Para que ocupe toda la altura de la pantalla */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh; /* Takes full screen height */
+  background-color: #f4f4f4; /* Light background to contrast the spinner */
+}
+
+.spinner {
+  width: 50px; /* Slightly larger for better visibility */
+  height: 50px;
+  border: 6px solid rgba(0, 0, 0, 0.1); /* Thicker border */
+  border-top: 6px solid #3498db; /* Accent color */
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite; /* Faster animation */
+  margin-bottom: 20px; /* More space between spinner and text */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+.loading-text {
+  font-size: 20px; /* Larger font size for better readability */
+  color: #333; /* Darker text color for better contrast */
+  font-weight: 500; /* Slightly bolder text */
+  text-transform: uppercase; /* All caps for emphasis */
+  letter-spacing: 1px; /* Slightly spaced out text for modern look */
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
   }
-  
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Media query for smaller screens */
+@media (max-width: 600px) {
   .spinner {
     width: 40px;
     height: 40px;
-    border: 5px solid rgba(0, 0, 0, 0.1);
-    border-top: 5px solid #3498db; /* Color del spinner */
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 15px; /* Espacio entre el spinner y el texto */
+    border-width: 4px;
   }
   
   .loading-text {
-    font-size: 18px;
-    color: #555; /* Color del texto */
+    font-size: 16px;
   }
-  
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-  
+}

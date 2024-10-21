@@ -47,7 +47,6 @@ const Header = ({toggleMobileSidebar}: ItemType) => {
           <IconMenu width="20" height="20" />
         </IconButton>
 
-
         <IconButton
           size="large"
           aria-label="show 11 new notifications"
@@ -63,7 +62,7 @@ const Header = ({toggleMobileSidebar}: ItemType) => {
         <Box flexGrow={1} />
         <Stack spacing={1} direction="row" alignItems="center">
           <Button variant="contained" component={Link} href="/authentication/login"   disableElevation color="primary" >
-            Login
+          Cerrar Sesión 
           </Button>
           <Profile />
         </Stack>
