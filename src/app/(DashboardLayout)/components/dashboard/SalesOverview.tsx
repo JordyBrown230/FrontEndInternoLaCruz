@@ -1,117 +1,95 @@
-import React from 'react';
-import { Select, MenuItem } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+'use client';
+import { Typography, Grid, CardContent, Box, Container } from '@mui/material';
+import { useEffect, useState } from 'react';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
-import dynamic from "next/dynamic";
-const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
+interface User {
+  user_id: number;
+  username: string;
+  email: string;
+  Person: {
+    first_name: string;
+    last_name: string;
+    cedula: string;
+  };
+}
 
-const SalesOverview = () => {
+const Municipalidad: React.FC = () => {
+  const [users, setUsers] = useState<User[]>([]);
 
-    // select
-    const [month, setMonth] = React.useState('1');
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('http://localhost:9000/sit/admin/listar', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Error en la red');
+      const data = await response.json();
+      setUsers(data.users);
+    } catch (error) {
+      console.error('Error al obtener usuarios:', error);
+    }
+  };
 
-    const handleChange = (event: any) => {
-        setMonth(event.target.value);
-    };
+  useEffect(() => {
+    AOS.init();
+    fetchUsers();
+  }, []);
 
-    // chart color
-    const theme = useTheme();
-    const primary = theme.palette.primary.main;
-    const secondary = theme.palette.secondary.main;
-
-    // chart
-    const optionscolumnchart: any = {
-        chart: {
-            type: 'bar',
-            fontFamily: "'Plus Jakarta Sans', sans-serif;",
-            foreColor: '#adb0bb',
-            toolbar: {
-                show: true,
-            },
-            height: 370,
-        },
-        colors: [primary, secondary],
-        plotOptions: {
-            bar: {
-                horizontal: false,
-                barHeight: '60%',
-                columnWidth: '42%',
-                borderRadius: [6],
-                borderRadiusApplication: 'end',
-                borderRadiusWhenStacked: 'all',
-            },
-        },
-
-        stroke: {
-            show: true,
-            width: 5,
-            lineCap: "butt",
-            colors: ["transparent"],
-          },
-        dataLabels: {
-            enabled: false,
-        },
-        legend: {
-            show: false,
-        },
-        grid: {
-            borderColor: 'rgba(0,0,0,0.1)',
-            strokeDashArray: 3,
-            xaxis: {
-                lines: {
-                    show: false,
-                },
-            },
-        },
-        yaxis: {
-            tickAmount: 4,
-        },
-        xaxis: {
-            categories: ['16/08', '17/08', '18/08', '19/08', '20/08', '21/08', '22/08', '23/08'],
-            axisBorder: {
-                show: false,
-            },
-        },
-        tooltip: {
-            theme: 'dark',
-            fillSeriesColor: false,
-        },
-    };
-    const seriescolumnchart: any = [
-        {
-            name: 'Eanings this month',
-            data: [355, 390, 300, 350, 390, 180, 355, 390],
-        },
-        {
-            name: 'Expense this month',
-            data: [280, 250, 325, 215, 250, 310, 280, 250],
-        },
-    ];
-
-    return (
-
-        <DashboardCard title="Sales Overview" action={
-            <Select
-                labelId="month-dd"
-                id="month-dd"
-                value={month}
-                size="small"
-                onChange={handleChange}
-            >
-                <MenuItem value={1}>March 2023</MenuItem>
-                <MenuItem value={2}>April 2023</MenuItem>
-                <MenuItem value={3}>May 2023</MenuItem>
-            </Select>
-        }>
-            <Chart
-                options={optionscolumnchart}
-                series={seriescolumnchart}
-                type="bar"
-                height={370} width={"100%"}
-            />
-        </DashboardCard>
-    );
+  return (
+    <DashboardCard title="">
+    <Container maxWidth="lg">
+      <Box sx={{ textAlign: 'center', mb: 4 }}>
+        <Typography variant="h4" color="primary" gutterBottom data-aos="fade-up">
+          Lista de Usuarios
+        </Typography>
+        <Typography variant="subtitle1" color="textSecondary" data-aos="fade-up" data-aos-delay="100">
+          Aquí puedes ver los usuarios registrados
+        </Typography>
+      </Box>
+      
+      <Grid container spacing={4}>
+        {users.length > 0 ? (
+          users.map((user) => (
+            <Grid item xs={12} sm={6} md={4} key={user.user_id} data-aos="zoom-in" data-aos-delay="200">
+              <CardContent
+                sx={{
+                  boxShadow: 2,
+                  p: 3,
+                  borderRadius: 2,
+                  backgroundColor: '#f9f9f9',
+                  transition: '0.3s ease',
+                  '&:hover': { boxShadow: 4 },
+                }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                  {user.Person.first_name || 'N/A'} {user.Person.last_name || 'N/A'}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  Cédula: {user.Person.cedula || 'N/A'}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  Usuario: {user.username || 'N/A'}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  Email: {user.email || 'N/A'}
+                </Typography>
+              </CardContent>
+            </Grid>
+          ))
+        ) : (
+          <Typography variant="h6" color="textSecondary" sx={{ textAlign: 'center', width: '100%' }}>
+            No hay usuarios registrados.
+          </Typography>
+        )}
+      </Grid>
+    </Container>
+    </DashboardCard>
+  );
 };
 
-export default SalesOverview;
+export default Municipalidad;

@@ -1,87 +1,113 @@
-
 import dynamic from "next/dynamic";
-const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+import { useEffect, useState } from "react";
 import { useTheme } from '@mui/material/styles';
-import { Stack, Typography, Avatar, Fab } from '@mui/material';
-import { IconArrowDownRight, IconCurrencyDollar } from '@tabler/icons-react';
+import { Grid, Stack, Typography, Avatar, Box } from '@mui/material';
+import { IconArrowUpLeft } from '@tabler/icons-react';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
-const MonthlyEarnings = () => {
-  // chart color
-  const theme = useTheme();
-  const secondary = theme.palette.secondary.main;
-  const secondarylight = '#f5fcff';
-  const errorlight = '#fdede8';
 
-  // chart
-  const optionscolumnchart: any = {
+const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+
+interface Attraction {
+  attraction_id: number;
+  type_attraction: string;
+}
+
+const AttractionBreakup = () => {
+  const theme = useTheme();
+  const primary = theme.palette.primary.main;
+  const primarylight = '#ecf2ff';
+  const successlight = theme.palette.success.light;
+
+  // State for attractions
+  const [attractionCounts, setAttractionCounts] = useState<{ [key: string]: number }>({});
+
+  // Fetching attractions and calculating counts by type
+  const fetchAttractions = async () => {
+    try {
+      const response = await fetch('http://localhost:9000/sit/atraccion/listar', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data: Attraction[] = await response.json();
+
+      // Count the number of attractions per type
+      const counts: { [key: string]: number } = {};
+      data.forEach((attraction) => {
+        counts[attraction.type_attraction] = (counts[attraction.type_attraction] || 0) + 1;
+      });
+      setAttractionCounts(counts);
+    } catch (error) {
+      console.error('Error fetching attractions:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAttractions();
+  }, []);
+
+  // Prepare data for the chart
+  const attractionTypes = Object.keys(attractionCounts);
+  const seriesData = Object.values(attractionCounts);
+
+  const chartOptions = {
     chart: {
-      type: 'area',
+      type: 'donut' as const,  // Use the exact type 'donut'
       fontFamily: "'Plus Jakarta Sans', sans-serif;",
       foreColor: '#adb0bb',
       toolbar: {
         show: false,
       },
-      height: 60,
-      sparkline: {
-        enabled: true,
+      height: 155,
+    },
+    labels: attractionTypes,
+    colors: [primary, primarylight, '#F9F9FD', '#FFD700', '#FF6347', '#40E0D0'],
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '75%',
+          background: 'transparent',
+        },
       },
-      group: 'sparklines',
-    },
-    stroke: {
-      curve: 'smooth',
-      width: 2,
-    },
-    fill: {
-      colors: [secondarylight],
-      type: 'solid',
-      opacity: 0.05,
-    },
-    markers: {
-      size: 0,
     },
     tooltip: {
       theme: theme.palette.mode === 'dark' ? 'dark' : 'light',
     },
-  };
-  const seriescolumnchart: any = [
-    {
-      name: '',
-      color: secondary,
-      data: [25, 66, 20, 40, 12, 58, 20],
+    stroke: {
+      show: false,
     },
-  ];
+    dataLabels: {
+      enabled: false,
+    },
+    legend: {
+      show: true,
+    },
+  };
 
   return (
-    <DashboardCard
-      title="Monthly Earnings"
-      action={
-        <Fab color="secondary" size="medium" sx={{color: '#ffffff'}}>
-          <IconCurrencyDollar width={24} />
-        </Fab>
-      }
-      footer={
-        <Chart options={optionscolumnchart} series={seriescolumnchart} type="area" height={60} width={"100%"} />
-      }
-    >
-      <>
-        <Typography variant="h3" fontWeight="700" mt="-20px">
-          $6,820
+    <DashboardCard title="">
+      <Box>
+      <Typography variant="h4" color="primary">
+          Lista de Atracciones
         </Typography>
-        <Stack direction="row" spacing={1} my={1} alignItems="center">
-          <Avatar sx={{ bgcolor: errorlight, width: 27, height: 27 }}>
-            <IconArrowDownRight width={20} color="#FA896B" />
-          </Avatar>
-          <Typography variant="subtitle2" fontWeight="600">
-            +9%
+      <Grid container spacing={3}>
+        {/* Left column with details */}
+        <Grid item xs={7}>
+          <Typography variant="h6" fontWeight="700">
+            {seriesData.reduce((a, b) => a + b, 0)} Atracciones
           </Typography>
-          <Typography variant="subtitle2" color="textSecondary">
-            last year
-          </Typography>
-        </Stack>
-      </>
+        </Grid>
+        {/* Right column with donut chart */}
+      </Grid>
+      </Box>
     </DashboardCard>
   );
 };
 
-export default MonthlyEarnings;
+export default AttractionBreakup;

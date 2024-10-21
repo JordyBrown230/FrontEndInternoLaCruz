@@ -1,5 +1,5 @@
 'use client'
-import { Grid, Box } from '@mui/material';
+import { Grid, Box, Typography } from '@mui/material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 // components
 import SalesOverview from '@/app/(DashboardLayout)/components/dashboard/SalesOverview';
@@ -12,12 +12,13 @@ import MonthlyEarnings from '@/app/(DashboardLayout)/components/dashboard/Monthl
 const Dashboard = () => {
   return (
     <PageContainer title="Dashboard" description="this is Dashboard">
+      <Box textAlign="center" mb={4}>
+                        <Typography variant="h2" gutterBottom data-aos="fade-down">Gestión de Atracciones Turísticas</Typography>
+                        <Typography variant="h6" color="text.secondary" data-aos="fade-down">Administra las atracciones turísticas del cantón.</Typography>
+                    </Box>
       <Box>
         <Grid container spacing={3}>
-          <Grid item xs={12} lg={8}>
-            <SalesOverview />
-          </Grid>
-          <Grid item xs={12} lg={4}>
+        <Grid item xs={12} lg={3}>
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <YearlyBreakup />
@@ -27,15 +28,19 @@ const Dashboard = () => {
               </Grid>
             </Grid>
           </Grid>
-          <Grid item xs={12} lg={4}>
-            <RecentTransactions />
-          </Grid>
-          <Grid item xs={12} lg={8}>
-            <ProductPerformance />
-          </Grid>
-          <Grid item xs={12}>
-            <Blog />
-          </Grid>
+          <Grid item xs={12} lg={9}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+              <SalesOverview />
+              </Grid>
+              <Grid item xs={12}>
+              <ProductPerformance />
+              </Grid>
+              <Grid item xs={12}>
+              <RecentTransactions />
+              </Grid>
+            </Grid>
+          </Grid>      
         </Grid>
       </Box>
     </PageContainer>
