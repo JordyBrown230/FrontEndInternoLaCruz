@@ -417,7 +417,7 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                     <Grid container spacing={4} justifyContent="center">
                         {filteredAttractions.map((attraction) => (
                             <Grid item xs={12} md={6} key={attraction.attraction_id} data-aos="fade-up">
-                                <Card id={`attraction-${attraction.attraction_id}`}>
+                                <Card id={`attraction-${attraction.attraction_id}`} sx={{ boxShadow: 3, borderRadius: 2, overflow: 'hidden' }}>
                                     <Carousel>
                                         {attraction.Images && attraction.Images.length > 0 ? (
                                             attraction.Images.map((Images, index) => (
@@ -431,48 +431,111 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                         )}
                                     </Carousel>
                                     <CardContent>
-                                        <Typography gutterBottom variant="h5" component="div">
+                                        <Typography gutterBottom variant="h5" component="div" fontWeight="bold" color="primary">
                                             {attraction.name}
                                         </Typography>
-                                        <Typography variant="body2" color="text.secondary">
+                                        <Typography variant="body1" color="text.secondary" gutterBottom>
                                             {attraction.description}
                                         </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Tipo: {attraction.type_attraction}
+
+                                        {/* Datos principales */}
+                                        <Typography variant="subtitle1" fontWeight="bold" gutterBottom color="textPrimary">
+                                            Detalles
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
-                                            Ubicación: {attraction.location}
+                                            <strong>Ubicación:</strong> {attraction.location}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
-                                            Horario: {attraction.opening_hours}
+                                            <strong>Horario:</strong> {attraction.opening_hours}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
-                                            Estado: {attraction.status}
+                                            <strong>Estado:</strong> {attraction.status || 'No especificado'}
                                         </Typography>
+
+                                        {/* Mostrar el teléfono si está disponible */}
                                         {attraction.contact_value && (
                                             <Typography variant="body2" color="text.secondary">
-                                                Teléfono: {attraction.contact_value}
+                                                <strong>Teléfono:</strong> {attraction.contact_value}
                                             </Typography>
                                         )}
-                                        {attraction.website && (
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                href={attraction.website}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                sx={{ mt: 2 }}
-                                            >
-                                                Visitar Sitio Web
-                                            </Button>
-                                        )}
+
+                                        {/* Sección de Servicios y Propietario */}
+                                        <Box my={2}>
+                                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom color="textPrimary">
+                                                Servicios y Comunidad
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                <strong>Comunidad:</strong> {attraction.community || 'No especificado'}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                <strong>Propietario:</strong> {attraction.owner || 'No especificado'}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                <strong>Servicios:</strong> {attraction.services || 'No especificados'}
+                                            </Typography>
+                                        </Box>
+
+                                        {/* Sección de Accesibilidad */}
+                                        <Box my={2}>
+                                            <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
+                                                Accesibilidad
+                                            </Typography>
+                                            <Grid container spacing={1}>
+                                                <Grid item xs={6}>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        <strong>Acceso con rampa:</strong> {attraction.ramp_access ? 'Sí' : 'No'}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        <strong>Ascensor:</strong> {attraction.elevator_access ? 'Sí' : 'No'}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        <strong>Puertas anchas:</strong> {attraction.wide_doors ? 'Sí' : 'No'}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        <strong>Baños accesibles:</strong> {attraction.accessible_bathrooms ? 'Sí' : 'No'}
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item xs={6}>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        <strong>Estacionamiento reservado:</strong> {attraction.reserved_parking ? 'Sí' : 'No'}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        <strong>Personal capacitado:</strong> {attraction.trained_staff ? 'Sí' : 'No'}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        <strong>Guías de audio:</strong> {attraction.audio_guides ? 'Sí' : 'No'}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        <strong>Lenguaje de señas:</strong> {attraction.sign_language_services ? 'Sí' : 'No'}
+                                                    </Typography>
+                                                </Grid>
+                                            </Grid>
+                                        </Box>
+
                                         <Box mt={2}>
+                                            {attraction.website && (
+                                                <Button
+                                                    variant="outlined"
+                                                    color="primary"
+                                                    startIcon={<DirectionsIcon />}
+                                                    href={attraction.website}
+                                                    target="_blank"
+                                                    sx={{ mr: 1 }}
+                                                >
+                                                    Visitar Sitio Web
+
+                                                </Button>
+
+                                            )}
+                                            <br></br>
+                                            <br></br>
                                             <Button
                                                 variant="outlined"
                                                 color="primary"
                                                 startIcon={<DirectionsIcon />}
                                                 href={getGoogleMapsUrl(attraction.latitude, attraction.longitude)}
                                                 target="_blank"
+                                                sx={{ mr: 1 }}
                                             >
                                                 Ver en Google Maps
                                             </Button>
@@ -485,39 +548,25 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                             >
                                                 Ver en Waze
                                             </Button>
-                                            {attraction.phone && (
-                                                <Button
-                                                    variant="outlined"
-                                                    color="success"
-                                                    href={`tel:${attraction.phone}`}
-                                                    target="_blank"
-                                                >
-                                                    Llamar
-                                                </Button>
-                                            )}
                                         </Box>
-                                        <br />
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={() => generatePDF(attraction)}
 
-                                        >
-                                            Descargar Folleto
-                                        </Button>
-                                        <br />
-                                        <br />
-                                        <IconButton onClick={() => handleClickOpen(attraction)} aria-label="edit">
-                                            <EditIcon />
-                                        </IconButton>
-                                        <IconButton onClick={() => handleDeleteConfirmation(attraction)} aria-label="delete">
-                                            <DeleteIcon />
-                                        </IconButton>
+                                        {/* Botones de acciones */}
+                                        <Box mt={3} display="flex" justifyContent="space-between">
+                                            <Box>
+                                                <IconButton onClick={() => handleClickOpen(attraction)} aria-label="edit">
+                                                    <EditIcon />
+                                                </IconButton>
+                                                <IconButton onClick={() => handleDeleteConfirmation(attraction)} aria-label="delete" color="error">
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </Box>
+                                        </Box>
                                     </CardContent>
                                 </Card>
                             </Grid>
                         ))}
                     </Grid>
+
                 </Box>
             </DashboardCard>
 

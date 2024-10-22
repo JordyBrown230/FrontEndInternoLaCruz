@@ -2,6 +2,7 @@
 import { useState, useEffect, ChangeEvent } from 'react';
 import { Typography, Grid, Card, CardContent, CardMedia, Button, Box, TextField, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Select, InputLabel, FormControl, DialogContentText } from '@mui/material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
+import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import toast, { Toaster } from 'react-hot-toast';
@@ -185,7 +186,9 @@ const Municipalidad: React.FC = () => {
     });
 
     return (
-        <PageContainer title="Multimedia" description="">
+       
+        <PageContainer title="Multimedia" description=""> 
+        <DashboardCard title="">
             {/* Título de la vista */}
             <Typography variant="h4" gutterBottom align="center">
                 Gestión de Archivos Multimedia
@@ -340,6 +343,7 @@ const Municipalidad: React.FC = () => {
 
             {/* Toaster para mostrar notificaciones */}
             <Toaster />
+            </DashboardCard>
         </PageContainer>
     );
 };
