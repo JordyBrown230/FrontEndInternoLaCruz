@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import Link from "next/link";
+import React, { useState, MouseEvent } from 'react';
 import {
   Avatar,
   Box,
@@ -9,92 +8,228 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-} from "@mui/material";
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Typography,
+  List,
+  ListItem,
+  DialogActions,
+  TextField,
+} from '@mui/material';
+import { IconMail, IconUser } from '@tabler/icons-react';
 
-import { IconListCheck, IconMail, IconUser } from "@tabler/icons-react";
+const Perfil = () => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [abrirDialogoPerfil, setAbrirDialogoPerfil] = useState(false);
+  const [abrirDialogoCuenta, setAbrirDialogoCuenta] = useState(false);
+  const [editarPerfil, setEditarPerfil] = useState(false);
+  const [nombre, setNombre] = useState('John Doe');
+  const [email, setEmail] = useState('johndoe@example.com');
 
-const Profile = () => {
-  const [anchorEl2, setAnchorEl2] = useState(null);
-  const handleClick2 = (event: any) => {
-    setAnchorEl2(event.currentTarget);
+  const handleClick = (event: MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
   };
-  const handleClose2 = () => {
-    setAnchorEl2(null);
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleAbrirDialogoPerfil = () => {
+    setAbrirDialogoPerfil(true);
+    handleClose();
+  };
+
+  const handleAbrirDialogoCuenta = () => {
+    setAbrirDialogoCuenta(true);
+    handleClose();
+  };
+
+  const handleCerrarDialogos = () => {
+    setAbrirDialogoPerfil(false);
+    setAbrirDialogoCuenta(false);
+    setEditarPerfil(false);
+  };
+
+  const handleEditarPerfil = () => {
+    setEditarPerfil(true);
+  };
+
+  const handleGuardarCambios = () => {
+    // Aquí puedes manejar la lógica para guardar los cambios
+    console.log('Cambios guardados:', { nombre, email });
+    setEditarPerfil(false); // Cerrar el formulario de edición
   };
 
   return (
     <Box>
       <IconButton
         size="large"
-        aria-label="show 11 new notifications"
+        aria-label="abrir menú de perfil"
         color="inherit"
-        aria-controls="msgs-menu"
+        aria-controls="menu-perfil"
         aria-haspopup="true"
         sx={{
-          ...(typeof anchorEl2 === "object" && {
-            color: "primary.main",
+          ...(anchorEl && {
+            color: 'primary.main',
           }),
         }}
-        onClick={handleClick2}
+        onClick={handleClick}
       >
         <Avatar
-          src="/images/profile/user-1.jpg"
-          alt="image"
+          src="/images/profile/foto.png"
+          alt="Avatar de usuario"
           sx={{
             width: 35,
             height: 35,
           }}
         />
       </IconButton>
-      {/* ------------------------------------------- */}
-      {/* Message Dropdown */}
-      {/* ------------------------------------------- */}
+
+      {/* Menú desplegable */}
       <Menu
-        id="msgs-menu"
-        anchorEl={anchorEl2}
+        id="menu-perfil"
+        anchorEl={anchorEl}
         keepMounted
-        open={Boolean(anchorEl2)}
-        onClose={handleClose2}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         sx={{
-          "& .MuiMenu-paper": {
-            width: "200px",
+          '& .MuiMenu-paper': {
+            width: '200px',
           },
         }}
       >
-        <MenuItem>
+        <MenuItem onClick={handleAbrirDialogoPerfil}>
           <ListItemIcon>
             <IconUser width={20} />
           </ListItemIcon>
-          <ListItemText>My Profile</ListItemText>
+          <ListItemText>Mi Perfil</ListItemText>
         </MenuItem>
-        <MenuItem>
+       {/* <MenuItem onClick={handleAbrirDialogoCuenta}>
           <ListItemIcon>
             <IconMail width={20} />
           </ListItemIcon>
-          <ListItemText>My Account</ListItemText>
+          <ListItemText>Mi Cuenta</ListItemText>
         </MenuItem>
-        <MenuItem>
-          <ListItemIcon>
-            <IconListCheck width={20} />
-          </ListItemIcon>
-          <ListItemText>My Tasks</ListItemText>
-        </MenuItem>
+        */}
         <Box mt={1} py={1} px={2}>
           <Button
             href="/authentication/login"
             variant="outlined"
             color="primary"
-            component={Link}
             fullWidth
           >
-            Logout
+            Cerrar Sesión
           </Button>
         </Box>
       </Menu>
+
+      {/* Diálogo de Perfil */}
+      <Dialog open={abrirDialogoPerfil} onClose={handleCerrarDialogos} maxWidth="sm" fullWidth>
+        <DialogTitle>Mi Perfil</DialogTitle>
+        <DialogContent>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              p: 3,
+            }}
+          >
+            <Avatar
+              src="/images/profile/foto.png"
+              alt="Avatar de usuario"
+              sx={{ width: 100, height: 100, mb: 2 }}
+            />
+            {!editarPerfil ? (
+              <>
+                <Typography variant="h6">{nombre}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {email}
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ mt: 3 }}
+                  onClick={handleEditarPerfil}
+                >
+                  Editar Perfil
+                </Button>
+              </>
+            ) : (
+              <Box
+                component="form"
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  width: '100%',
+                }}
+              >
+                <TextField
+                  label="Nombre"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  margin="normal"
+                  fullWidth
+                />
+                <TextField
+                  label="Correo Electrónico"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  margin="normal"
+                  fullWidth
+                />
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ mt: 3 }}
+                  onClick={handleGuardarCambios}
+                >
+                  Guardar Cambios
+                </Button>
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCerrarDialogos} color="primary">
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo de Cuenta */}
+      <Dialog open={abrirDialogoCuenta} onClose={handleCerrarDialogos} maxWidth="sm" fullWidth>
+        <DialogTitle>Mi Cuenta</DialogTitle>
+        <DialogContent>
+          <Typography variant="h6" gutterBottom>
+            Configuración de la Cuenta
+          </Typography>
+          <List>
+            <ListItem>
+              <ListItemText primary="Cambiar Contraseña" />
+              <Button variant="outlined" color="primary">Actualizar</Button>
+            </ListItem>
+            <ListItem>
+              <ListItemText primary="Configuración de Seguridad" />
+              <Button variant="outlined" color="primary">Configurar</Button>
+            </ListItem>
+            <ListItem>
+              <ListItemText primary="Detalles de Facturación" />
+              <Button variant="outlined" color="primary">Ver</Button>
+            </ListItem>
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCerrarDialogos} color="primary">
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
 
-export default Profile;
+export default Perfil;
