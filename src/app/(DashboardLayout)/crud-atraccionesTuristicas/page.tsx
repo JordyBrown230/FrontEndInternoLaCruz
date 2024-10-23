@@ -36,20 +36,7 @@ interface Attraction {
     services: string;
     owner: string;
     community: string;
-    ramp_access: boolean;
-    acceso_ascensor: boolean;
-    wide_doors: boolean;
-    senalizacion_braille: boolean;
-    accessible_bathrooms: boolean;
-    reserved_parking: boolean;
-    trained_staff: boolean;
-    audio_guides: boolean;
-    sign_language_services: boolean;
-    accessible_rest_areas: boolean;
-    online_accessibility: boolean;
-    braille_signage: boolean;
-    elevator_access: boolean;
-    other_services: string;
+    accessibility: string;
     contact_value: string;
     contact_type: string;
 }
@@ -66,17 +53,6 @@ const validationSchema = Yup.object({
     website: Yup.string().url('Debe ser una URL válida').nullable(),
     status: Yup.string().nullable(),
     ramp_access: Yup.boolean(),
-    acceso_ascensor: Yup.boolean(),
-    wide_doors: Yup.boolean(),
-    senalizacion_braille: Yup.boolean(),
-    accessible_bathrooms: Yup.boolean(),
-    reserved_parking: Yup.boolean(),
-    trained_staff: Yup.boolean(),
-    audio_guides: Yup.boolean(),
-    sign_language_services: Yup.boolean(),
-    accessible_rest_areas: Yup.boolean(),
-    online_accessibility: Yup.boolean(),
-    other_services: Yup.string().nullable(),
 });
 
 interface Props {
@@ -100,6 +76,7 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
             }
             const data = await response.json(); // Asume que la API devuelve un JSON
             //setData(data); // Asigna los datos de la API al estado
+            console.log(data)
             setAttractions(data)
             setFilteredAttractions(data)
         } catch (error) {
@@ -164,20 +141,7 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
             services: values.services,
             owner: values.owner,
             community: values.community,
-            accessibility: {
-                ramp_access: values.ramp_access,
-                elevator_access: values.elevator_access,
-                wide_doors: values.wide_doors,
-                braille_signage: values.braille_signage,
-                accessible_bathrooms: values.accessible_bathrooms,
-                reserved_parking: values.reserved_parking,
-                trained_staff: values.trained_staff,
-                audio_guides: values.audio_guides,
-                sign_language_services: values.sign_language_services,
-                accessible_rest_areas: values.accessible_rest_areas,
-                online_accessibility: values.online_accessibility,
-                other_services: values.other_services,
-            },
+            accessibility: values.accessibility,
             images: values.images,
             contacts: contactos,
         };
@@ -473,44 +437,10 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                             <Typography variant="body2" color="text.secondary">
                                                 <strong>Servicios:</strong> {attraction.services || 'No especificados'}
                                             </Typography>
-                                        </Box>
-
-                                        {/* Sección de Accesibilidad */}
-                                        <Box my={2}>
-                                            <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                                                Accesibilidad
+                                            <Typography variant="body2" color="text.secondary">
+                                                <strong>Accesibilidad:</strong> {attraction.accessibility || 'No especificados'}
                                             </Typography>
-                                            <Grid container spacing={1}>
-                                                <Grid item xs={6}>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        <strong>Acceso con rampa:</strong> {attraction.ramp_access ? 'Sí' : 'No'}
-                                                    </Typography>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        <strong>Ascensor:</strong> {attraction.elevator_access ? 'Sí' : 'No'}
-                                                    </Typography>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        <strong>Puertas anchas:</strong> {attraction.wide_doors ? 'Sí' : 'No'}
-                                                    </Typography>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        <strong>Baños accesibles:</strong> {attraction.accessible_bathrooms ? 'Sí' : 'No'}
-                                                    </Typography>
-                                                </Grid>
-                                                <Grid item xs={6}>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        <strong>Estacionamiento reservado:</strong> {attraction.reserved_parking ? 'Sí' : 'No'}
-                                                    </Typography>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        <strong>Personal capacitado:</strong> {attraction.trained_staff ? 'Sí' : 'No'}
-                                                    </Typography>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        <strong>Guías de audio:</strong> {attraction.audio_guides ? 'Sí' : 'No'}
-                                                    </Typography>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        <strong>Lenguaje de señas:</strong> {attraction.sign_language_services ? 'Sí' : 'No'}
-                                                    </Typography>
-                                                </Grid>
-                                            </Grid>
-                                        </Box>
+                                        </Box>                   
 
                                         <Box mt={2}>
                                             {attraction.website && (
@@ -586,26 +516,14 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                         website: currentAttraction ? currentAttraction.website : '',
                         status: currentAttraction ? currentAttraction.status : '',
                         images: currentAttraction ? currentAttraction.images : [],
-                        ramp_access: currentAttraction ? currentAttraction.ramp_access : false,
-                        acceso_ascensor: currentAttraction ? currentAttraction.acceso_ascensor : false,
-                        wide_doors: currentAttraction ? currentAttraction.wide_doors : false,
-                        senalizacion_braille: currentAttraction ? currentAttraction.senalizacion_braille : false,
-                        accessible_bathrooms: currentAttraction ? currentAttraction.accessible_bathrooms : false,
-                        reserved_parking: currentAttraction ? currentAttraction.reserved_parking : false,
-                        trained_staff: currentAttraction ? currentAttraction.trained_staff : false,
-                        audio_guides: currentAttraction ? currentAttraction.audio_guides : false,
-                        sign_language_services: currentAttraction ? currentAttraction.sign_language_services : false,
-                        accessible_rest_areas: currentAttraction ? currentAttraction.accessible_rest_areas : false,
-                        online_accessibility: currentAttraction ? currentAttraction.online_accessibility : false,
-                        other_services: currentAttraction ? currentAttraction.other_services : '',
                         remarks: currentAttraction ? currentAttraction.remarks : '',
                         services: currentAttraction ? currentAttraction.services : '',
                         owner: currentAttraction ? currentAttraction.owner : '',
                         community: currentAttraction ? currentAttraction.community : '',
                         contact_value: currentAttraction ? currentAttraction.contact_value : '',
                         contact_type: currentAttraction ? currentAttraction.contact_type : '',
-                        braille_signage: currentAttraction ? currentAttraction.braille_signage : false,
-                        elevator_access: currentAttraction ? currentAttraction.elevator_access : false,
+                        accessibility: currentAttraction ? currentAttraction.accessibility : '',
+
                     }}
                     validationSchema={validationSchema}
                     onSubmit={handleSave}
@@ -812,116 +730,20 @@ const Municipalidad: React.FC<Props> = ({ attraction }) => {
                                     )}
                                 </Field>
 
-                                {/* Sección de Accesibilidad */}
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
-                                        <Typography variant="h6">Accesibilidad</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <Field name="ramp_access">
-                                            {({ field }: any) => (
-                                                <FormControlLabel
-                                                    control={<Checkbox {...field} checked={field.value} />}
-                                                    label="Acceso con Rampa"
-                                                />
-                                            )}
-                                        </Field>
-                                        <Field name="elevator_access">
-                                            {({ field }: any) => (
-                                                <FormControlLabel
-                                                    control={<Checkbox {...field} checked={field.value} />}
-                                                    label="Acceso con Ascensor"
-                                                />
-                                            )}
-                                        </Field>
-                                        <Field name="wide_doors">
-                                            {({ field }: any) => (
-                                                <FormControlLabel
-                                                    control={<Checkbox {...field} checked={field.value} />}
-                                                    label="Puertas Anchas"
-                                                />
-                                            )}
-                                        </Field>
-                                        <Field name="accessible_bathrooms">
-                                            {({ field }: any) => (
-                                                <FormControlLabel
-                                                    control={<Checkbox {...field} checked={field.value} />}
-                                                    label="Baños Accesibles"
-                                                />
-                                            )}
-                                        </Field>
-                                        <Field name="reserved_parking">
-                                            {({ field }: any) => (
-                                                <FormControlLabel
-                                                    control={<Checkbox {...field} checked={field.value} />}
-                                                    label="Estacionamiento Reservado"
-                                                />
-                                            )}
-                                        </Field>
-                                        <Field name="trained_staff">
-                                            {({ field }: any) => (
-                                                <FormControlLabel
-                                                    control={<Checkbox {...field} checked={field.value} />}
-                                                    label="Personal Capacitado"
-                                                />
-                                            )}
-                                        </Field>
-                                        <Field name="audio_guides">
-                                            {({ field }: any) => (
-                                                <FormControlLabel
-                                                    control={<Checkbox {...field} checked={field.value} />}
-                                                    label="Guías de Audio"
-                                                />
-                                            )}
-                                        </Field>
-                                        <Field name="sign_language_services">
-                                            {({ field }: any) => (
-                                                <FormControlLabel
-                                                    control={<Checkbox {...field} checked={field.value} />}
-                                                    label="Servicios de Lenguaje de Señas"
-                                                />
-                                            )}
-                                        </Field>
-                                        <Field name="accessible_rest_areas">
-                                            {({ field }: any) => (
-                                                <FormControlLabel
-                                                    control={<Checkbox {...field} checked={field.value} />}
-                                                    label="Áreas de Descanso Accesibles"
-                                                />
-                                            )}
-                                        </Field>
-                                        <Field name="braille_signage">
-                                            {({ field }: any) => (
-                                                <FormControlLabel
-                                                    control={<Checkbox {...field} checked={field.value} />}
-                                                    label="Señalización en Braille"
-                                                />
-                                            )}
-                                        </Field>
-                                        <Field name="online_accessibility">
-                                            {({ field }: any) => (
-                                                <FormControlLabel
-                                                    control={<Checkbox {...field} checked={field.value} />}
-                                                    label="Accesibilidad en Línea"
-                                                />
-                                            )}
-                                        </Field>
-                                        <Field name="other_services">
-                                            {({ field, meta }: any) => (
-                                                <TextField
-                                                    {...field}
-                                                    label="Otros Servicios"
-                                                    fullWidth
-                                                    margin="dense"
-                                                    variant="standard"
-                                                    error={meta.touched && Boolean(meta.error)}
-                                                    helperText={meta.touched && meta.error}
-                                                    sx={{ '& .MuiInputBase-input': { '&:hover': { color: 'blue' } } }}
-                                                />
-                                            )}
-                                        </Field>
-                                    </AccordionDetails>
-                                </Accordion>
+                                <Field name="accessibility">
+                                    {({ field, meta }: any) => (
+                                        <TextField
+                                            {...field}
+                                            label="Accesibilidad"
+                                            fullWidth
+                                            margin="dense"
+                                            variant="standard"
+                                            error={meta.touched && Boolean(meta.error)}
+                                            helperText={meta.touched && meta.error}
+                                            sx={{ '& .MuiInputBase-input': { '&:hover': { color: 'blue' } } }}
+                                        />
+                                    )}
+                                </Field>
 
                                 <input
                                     accept="image/*"

@@ -1,6 +1,7 @@
 export async function fetchData(url, _data) {
-    const { images, contacts, accessibility, ...data } = _data
+    const { images, contacts, ...data } = _data
     try {
+        console.log('dara', data)
         const response = await fetch(url, {
             method: 'POST',
             credentials: 'include',
@@ -18,32 +19,6 @@ export async function fetchData(url, _data) {
         const responseAtrac = await response.json()
         const attraction_id = responseAtrac.attraction.attraction_id
 
-        if (accessibility) {
-            console.log(accessibility)
-                const response = await fetch('http://localhost:9000/sit/atraccion-accesibilidad/agregar', {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({accessibility, attraction_id})
-                });
-                console.log(await response.json())
-
-                if (!response.ok) {
-                    const response = await fetch('http://localhost:9000/sit/atraccion/eliminar/' + attraction_id, {
-                        method: 'DELETE',
-                        credentials: 'include',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    });
-                    console.log(await response.json())
-
-                    const errorData = await response.json();
-                    throw new Error(`Network response was not ok: ${errorData.message || 'Unknown error'}`);
-                }           
-        }
 
         if (contacts) {
             const response = await fetch('http://localhost:9000/sit/atraccion-contacto/agregar', {

@@ -81,8 +81,62 @@ const Municipalidad = () => {
             );
             toast.success('Sitio arqueológico actualizado con éxito');
         } else {
-            updatedSites = [...archaeologicalSites, { id: Date.now(), ...values, image: imageUrl }] as ArchaeologicalSite[];
-            toast.success('Sitio arqueológico agregado con éxito');
+
+            try {
+                // Agregar nueva información
+                const addResponse = await fetch('http://localhost:9000/sit/sitio-arquelogico/agregar', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(values),
+                });
+
+                if (!addResponse.ok) {
+                    throw new Error('Error al agregar el transporte');
+                }
+
+                const newResponse = await addResponse.json();
+                console.log(newResponse)
+                // Subida de imágenes (si existen)
+                if (values.image.length !== 0) {
+                    console.log(values.image)
+                    const formData = new FormData();
+                    values.image.forEach((file) => {
+                        formData.append('images', file); // 'images' es la clave que espera en el backend
+                    });
+
+                    const imageUploadResponse = await fetch('http://localhost:9000/sit/sitio-arquelogico/agregar-imagenes/' + newResponse.data.id, {
+                        method: 'POST',
+                        credentials: 'include',
+                        body: formData,
+                    });
+
+                    // Si la subida de imágenes falla, se elimina el previamente agregado
+                    if (!imageUploadResponse.ok) {
+                        await fetch('http://localhost:9000/sit/sitio-arquelogico/eliminar/' + newResponse.data.id, {
+                            method: 'DELETE',
+                            credentials: 'include',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        });
+
+                        const errorData = await imageUploadResponse.json();
+                        throw new Error(`Error al subir imágenes: ${errorData.message || 'Error desconocido'}`);
+                    }
+                }
+
+                //fetchAttractions()
+
+                updatedSites = [...archaeologicalSites, { id: Date.now(), ...values, image: imageUrl }] as ArchaeologicalSite[];
+                toast.success('Sitio arqueológico agregado con éxito');
+            } catch (error) {
+                toast.error('Error al agregar la información');
+                console.error('Error:', error);
+                return;
+            }
         }
         setArchaeologicalSites(updatedSites);
         setFilteredSites(updatedSites);
