@@ -38,9 +38,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     }
   }, []);
 
-  const handleLogout = () => {
-    Cookies.remove("authToken");
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    try {
+      // Realiza la solicitud de cierre de sesión a tu API
+      const response = await fetch('http://localhost:9000/sit/cerrar-sesion', {
+        method: 'POST', // Cambia esto si tu API utiliza otro método
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          // Agrega el token de autenticación si es necesario
+          'Authorization': `Bearer ${Cookies.get("authToken")}` // Opcional, según tu implementación
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error('Error al cerrar sesión');
+      }
+  
+      // Si la respuesta es exitosa, elimina el token de las cookies y actualiza el estado
+      Cookies.remove("authToken");
+      setIsLoggedIn(false);
+  
+      // Aquí puedes redirigir al usuario a la página de inicio o mostrar un mensaje de éxito
+      console.log('Sesión cerrada con éxito');
+    } catch (error) {
+      console.error('Error en el cierre de sesión:', error);
+      // Manejo de errores: puedes mostrar un mensaje al usuario si lo deseas
+    }
   };
 
   if (!isLoggedIn) {
