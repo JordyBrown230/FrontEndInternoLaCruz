@@ -1,11 +1,12 @@
 "use client"; // Asegúrate de agregar esta línea
 
-import { styled, Container, Box, Button } from "@mui/material";
+import { styled, Container, Box, AppBar, Toolbar, Stack, IconButton, Badge, Button } from "@mui/material";
 import React, { useState, useEffect } from "react";
-import Header from "@/app/(DashboardLayout)/layout/header/Header";
 import Sidebar from "@/app/(DashboardLayout)/layout/sidebar/Sidebar";
 import Login2 from "../authentication/login/page";
 import Cookies from "js-cookie";
+import { IconBellRinging, IconMenu } from '@tabler/icons-react';
+import Profile from '@/app/(DashboardLayout)/layout/header/Profile'; // Importa tu componente de perfil
 
 const MainWrapper = styled("div")(() => ({
   display: "flex",
@@ -22,11 +23,25 @@ const PageWrapper = styled("div")(() => ({
   backgroundColor: "transparent",
 }));
 
+// Estilos personalizados para el AppBar (Header)
+const AppBarStyled = styled(AppBar)(({ theme }) => ({
+  boxShadow: 'none',
+  background: theme.palette.background.paper,
+  justifyContent: 'center',
+  backdropFilter: 'blur(4px)',
+  minHeight: '70px', // Applied globally for clarity
+}));
+
+const ToolbarStyled = styled(Toolbar)(({ theme }) => ({
+  width: '100%',
+  color: theme.palette.text.secondary,
+}));
+
 interface Props {
   children: React.ReactNode;
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: Props) {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -40,30 +55,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   const handleLogout = async () => {
     try {
-      // Realiza la solicitud de cierre de sesión a tu API
       const response = await fetch('http://localhost:9000/sit/cerrar-sesion', {
-        method: 'POST', // Cambia esto si tu API utiliza otro método
+        method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          // Agrega el token de autenticación si es necesario
-          'Authorization': `Bearer ${Cookies.get("authToken")}` // Opcional, según tu implementación
+          Authorization: `Bearer ${Cookies.get("authToken")}`,
         },
       });
-  
+
       if (!response.ok) {
         throw new Error('Error al cerrar sesión');
       }
-  
-      // Si la respuesta es exitosa, elimina el token de las cookies y actualiza el estado
+
       Cookies.remove("authToken");
       setIsLoggedIn(false);
-  
-      // Aquí puedes redirigir al usuario a la página de inicio o mostrar un mensaje de éxito
       console.log('Sesión cerrada con éxito');
     } catch (error) {
       console.error('Error en el cierre de sesión:', error);
-      // Manejo de errores: puedes mostrar un mensaje al usuario si lo deseas
     }
   };
 
@@ -72,25 +81,59 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <MainWrapper className="mainwrapper">
+    <MainWrapper>
+      {/* Sidebar (Menú lateral) */}
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         isMobileSidebarOpen={isMobileSidebarOpen}
         onSidebarClose={() => setMobileSidebarOpen(false)}
       />
-      <PageWrapper className="page-wrapper">
-        <Header toggleMobileSidebar={() => setMobileSidebarOpen(true)} />
+
+      {/* Contenedor principal */}
+      <PageWrapper>
+        {/* Header */}
+        <AppBarStyled position="sticky" color="default">
+          <ToolbarStyled>
+            <IconButton
+              color="inherit"
+              aria-label="open sidebar"
+              onClick={() => setMobileSidebarOpen(true)}
+              sx={{
+                display: { lg: 'none', xs: 'inline' },
+              }}
+            >
+              <IconMenu width={20} height={20} />
+            </IconButton>
+
+            <Box flexGrow={1} />
+
+            <IconButton size="large" aria-label="show notifications" color="inherit">
+              <Badge variant="dot" color="primary">
+                <IconBellRinging size={21} stroke={1.5} />
+              </Badge>
+            </IconButton>
+
+            <Stack spacing={1} direction="row" alignItems="center">
+              <Profile />
+              <Button 
+                variant="outlined" 
+                color="primary" 
+                onClick={handleLogout}>
+                Cerrar sesión
+              </Button>
+            </Stack>
+          </ToolbarStyled>
+        </AppBarStyled>
+
+        {/* Contenido de la página */}
         <Container
           sx={{
-            paddingTop: "20px",
+            paddingTop: "5px",
             maxWidth: "1200px",
           }}
         >
           <Box sx={{ minHeight: "calc(100vh - 170px)" }}>
             {children}
-            <Button variant="contained" color="secondary" onClick={handleLogout}>
-              Cerrar sesión
-            </Button>
           </Box>
         </Container>
       </PageWrapper>
