@@ -110,6 +110,7 @@ const Municipalidad: React.FC = () => {
         cedula: formData.Person.cedula
       }
     }
+    
     try {
       const method = isEditing ? 'PUT' : 'POST';
       const url = isEditing
@@ -283,7 +284,8 @@ const Municipalidad: React.FC = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    required
+                    disabled={isEditing} // Desactivar el campo si se está editando
+                    required={!isEditing} // Requerir solo si no se está editando
                   />
                 </Grid>
                 <Grid item xs={12}>
