@@ -1,26 +1,18 @@
 import React, { useState } from "react";
-import "../login/Login.css"
+import Cookies from "js-cookie";
+import "../login/Login.css";
 import { fetchData } from "./fetchDataLogin.js";
-import {
-  Box,
-  Typography,
-  FormGroup,
-  FormControlLabel,
-  Button,
-  Stack,
-  Checkbox,
-} from "@mui/material";
-import Link from "next/link";
-import { useRouter } from "next/navigation"; 
-import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
+import { Box, Typography, Stack, Button } from "@mui/material";
+import { useRouter } from "next/navigation";
 
 interface loginType {
   title?: string;
   subtitle?: JSX.Element | JSX.Element[];
   subtext?: JSX.Element | JSX.Element[];
+  setIsLoggedIn: (value: boolean) => void; // Agrega esta prop
 }
 
-const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
+const AuthLogin = ({ title, subtitle, subtext, setIsLoggedIn }: loginType) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
@@ -30,10 +22,21 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
       username: username,
       password: password,
     };
+
     try {
       const response = await fetchData('http://localhost:9000/sit/login', data);
-      if (response.status === 200) { 
-        router.push('/');
+
+      console.log('Respuesta completa del servidor:', response);
+
+      if (response.status === 200) {
+        const token = response?.token; // Token está en response.token
+        if (token) {
+          Cookies.set('authToken', token, { expires: 7 }); // Guarda el token en una cookie
+          setIsLoggedIn(true); // Actualiza el estado de autenticación en el layout principal
+          router.push('/'); // Redirige a la página principal
+        } else {
+          console.error("Token no encontrado en la respuesta");
+        }
       } else {
         console.error("Credenciales incorrectas");
       }
@@ -43,80 +46,68 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
   };
 
   const handleForgotPassword = () => {
-     window.location.href ='authEmail';
+    window.location.href = 'authEmail';
   };
 
   return (
-  <>
-    {title ? (
-      <Typography fontWeight="700" variant="h2" mb={1}>
-        {title}
-      </Typography>
-    ) : null}
-
-    {subtext}
-
-    <Stack>
-      <Box>
-        <Typography
-          variant="subtitle1"
-          fontWeight={600}
-          component="label"
-          htmlFor="username"
-          mb="8px"
-        >
-          Nombre de Usuario:
+    <>
+      {title && (
+        <Typography fontWeight="700" variant="h2" mb={1}>
+          {title}
         </Typography>
-        <br />
-        <br />
-        <input value={username} onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setUsername(e.target.value)} 
-        className="input"/>
-
-      </Box>
-      <Box mt="25px">
-        <Typography
-          variant="subtitle1"
-          fontWeight={600}
-          component="label"
-          htmlFor="password"
-          mb="5px"
-        >
-          Contraseña:
-        </Typography>
-        <br />
-        <br />
-        <input value={password} onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setPassword(e.target.value)}
-        className="input" type="password"/>
-
-      </Box>
-      <Stack
-        justifyContent="space-between"
-        direction="row"
-        alignItems="center"
-        my={2}
-      >
+      )}
+      {subtext}
+      <Stack>
+        <Box>
+          <Typography
+            variant="subtitle1"
+            fontWeight={600}
+            component="label"
+            htmlFor="username"
+            mb="8px"
+          >
+            Nombre de Usuario:
+          </Typography>
+          <br />
+          <br />
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="input"
+          />
+        </Box>
+        <Box mt="25px">
+          <Typography
+            variant="subtitle1"
+            fontWeight={600}
+            component="label"
+            htmlFor="password"
+            mb="5px"
+          >
+            Contraseña:
+          </Typography>
+          <br />
+          <br />
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input"
+            type="password"
+          />
+        </Box>
       </Stack>
-    </Stack>
-    <Box>
-    <Button
-          className="btn"
-          onClick={handleLogin}  
-        >
+      <Box>
+        <Button className="btn" onClick={handleLogin}>
           Iniciar Sesión
         </Button>
-    </Box>
-
-    <Box mt="15px">
-        <Button
-          type="button" variant="text" color="primary" 
-          onClick={handleForgotPassword}  
-        >
+      </Box>
+      <Box mt="15px">
+        <Button type="button" variant="text" color="primary" onClick={handleForgotPassword}>
           ¿Olvidó su contraseña?
         </Button>
       </Box>
-
-    {subtitle}
-  </>
+      {subtitle}
+    </>
   );
 };
 

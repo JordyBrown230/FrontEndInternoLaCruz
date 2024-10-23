@@ -19,7 +19,7 @@ interface ArchaeologicalSite {
     description: string;
     latitude: number;
     longitude: number;
-    image?: string | null;
+    images: string[]; // Cambiado a un arreglo de strings
 }
 
 // Validación con Yup
@@ -39,7 +39,7 @@ const Municipalidad = () => {
             description: "Situado cerca de la hermosa Turrialba se encuentra el Monumento Nacional Guayabo, son unas impresionantes ruinas situadas en medio de la exuberante selva tropical.",
             latitude: 10.683754,
             longitude: -85.618924,
-            image: "https://costarica.org/wp-content/uploads/2014/12/Orosi-Ruins.jpg"
+            images: ["https://costarica.org/wp-content/uploads/2014/12/Orosi-Ruins.jpg"]
         },
         {
             id: 2,
@@ -47,7 +47,7 @@ const Municipalidad = () => {
             description: "Cueva con pinturas rupestres bien preservadas.",
             latitude: 10.671509,
             longitude: -85.638865,
-            image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgC0qoAseHeXKc17vcC9uME8HSbS9aHJNJgQzJIpHa9gMnHl_e8BCE38685YIx-AU4wyWsKaYRUgqI_JFgs0QpJC57NhRqxv2os80mvl4v85hU9MzaLm5akFKcjpKHb_pZ_TZ3j7hyphenhyphengxPXO/s1600/2+P1060502+%255B50%2525%255Dfinal.JPG"
+            images: ["https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgC0qoAseHeXKc17vcC9uME8HSbS9aHJNJgQzJIpHa9gMnHl_e8BCE38685YIx-AU4wyWsKaYRUgqI_JFgs0QpJC57NhRqxv2os80mvl4v85hU9MzaLm5akFKcjpKHb_pZ_TZ3j7hyphenhyphengxPXO/s1600/2+P1060502+%255B50%2525%255Dfinal.JPG"]
         }
     ]);
     const [filteredSites, setFilteredSites] = useState<ArchaeologicalSite[]>(archaeologicalSites);
@@ -60,7 +60,7 @@ const Municipalidad = () => {
 
     const handleClickOpen = (site: ArchaeologicalSite | null = null) => {
         setCurrentSite(site);
-        setPreviewImage(site?.image || null);
+        setPreviewImage(site?.images[0] || null); // Asumimos que siempre muestra la primera imagen
         setOpenDialog(true);
     };
 
@@ -73,17 +73,15 @@ const Municipalidad = () => {
 
     const handleSave = async (values: Omit<ArchaeologicalSite, 'id'>) => {
         let updatedSites;
-        const imageUrl = previewImage;
+        const imageUrls = values.images;
 
         if (currentSite) {
             updatedSites = archaeologicalSites.map(site =>
-                site.id === currentSite.id ? { ...site, ...values, image: imageUrl } : site
+                site.id === currentSite.id ? { ...site, ...values, images: imageUrls } : site
             );
             toast.success('Sitio arqueológico actualizado con éxito');
         } else {
-
             try {
-                // Agregar nueva información
                 const addResponse = await fetch('http://localhost:9000/sit/sitio-arquelogico/agregar', {
                     method: 'POST',
                     credentials: 'include',
@@ -94,16 +92,14 @@ const Municipalidad = () => {
                 });
 
                 if (!addResponse.ok) {
-                    throw new Error('Error al agregar el transporte');
+                    throw new Error('Error al agregar el sitio arqueológico');
                 }
 
                 const newResponse = await addResponse.json();
-                console.log(newResponse)
-                // Subida de imágenes (si existen)
-                if (values.image.length !== 0) {
-                    console.log(values.image)
+
+                if (values.images.length !== 0) {
                     const formData = new FormData();
-                    values.image.forEach((file) => {
+                    values.images.forEach((file) => {
                         formData.append('images', file); // 'images' es la clave que espera en el backend
                     });
 
@@ -113,7 +109,6 @@ const Municipalidad = () => {
                         body: formData,
                     });
 
-                    // Si la subida de imágenes falla, se elimina el previamente agregado
                     if (!imageUploadResponse.ok) {
                         await fetch('http://localhost:9000/sit/sitio-arquelogico/eliminar/' + newResponse.data.id, {
                             method: 'DELETE',
@@ -128,9 +123,7 @@ const Municipalidad = () => {
                     }
                 }
 
-                //fetchAttractions()
-
-                updatedSites = [...archaeologicalSites, { id: Date.now(), ...values, image: imageUrl }] as ArchaeologicalSite[];
+                updatedSites = [...archaeologicalSites, { id: Date.now(), ...values, images: imageUrls }] as ArchaeologicalSite[];
                 toast.success('Sitio arqueológico agregado con éxito');
             } catch (error) {
                 toast.error('Error al agregar la información');
@@ -144,9 +137,11 @@ const Municipalidad = () => {
     };
 
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files && event.target.files[0]) {
+        if (event.target.files && event.target.files.length > 0) {
+            const files = Array.from(event.target.files);
+            const newImages = files.map(file => URL.createObjectURL(file));
             setSelectedImage(event.target.files[0]);
-            setPreviewImage(URL.createObjectURL(event.target.files[0]));
+            setPreviewImage(newImages[0]); // Previsualiza la primera imagen seleccionada
         }
     };
 
@@ -223,9 +218,9 @@ const Municipalidad = () => {
                                             dangerouslySetInnerHTML={{ __html: site.description }}
                                             sx={{ whiteSpace: 'pre-wrap' }}
                                         />
-                                        {site.image && (
+                                        {site.images && (
                                             <Box mt={2}>
-                                                <img src={site.image} alt={site.name} style={{ maxWidth: '100%' }} />
+                                                <img src={site.images[0]} alt={site.name} style={{ maxWidth: '100%' }} />
                                             </Box>
                                         )}
                                         <Box mt={2}>
@@ -277,6 +272,7 @@ const Municipalidad = () => {
                         description: currentSite ? currentSite.description : '',
                         latitude: currentSite ? currentSite.latitude : 0,
                         longitude: currentSite ? currentSite.longitude : 0,
+                        images: currentSite ? currentSite.images : [],
                     }}
                     validationSchema={validationSchema}
                     onSubmit={(values) => {
@@ -334,7 +330,7 @@ const Municipalidad = () => {
                                     )}
                                 </Field>
                                 <Box mt={2}>
-                                    <Typography variant="h6">Imagen</Typography>
+                                    <Typography variant="h6">Imágenes</Typography>
                                     <Box display="flex" alignItems="center" mt={1}>
                                         <Button
                                             variant="outlined"

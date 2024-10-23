@@ -1,23 +1,18 @@
 "use client";
-import Link from "next/link";
-import { Grid, Box, Card, Stack, Typography } from "@mui/material";
-// components
+import { Grid, Box, Card } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "@/app/(DashboardLayout)/layout/shared/logo/Logo";
 import AuthLogin from "../auth/AuthLogin";
-// Importa el archivo CSS
-import '../login/Login.css'; // Asegúrate de que la ruta sea correcta
 
-function Login2() {
+interface Login2Props {
+  setIsLoggedIn: (value: boolean) => void; // Asegúrate de aceptar setIsLoggedIn como prop
+}
+
+function Login2({ setIsLoggedIn }: Login2Props) {
   return (
-    <PageContainer title="Login" description="this is Login page">
+    <PageContainer title="SIT" description="this is Login page">
       <Box className="container">
-        <Grid
-          container
-          spacing={0}
-          justifyContent="center"
-          sx={{ height: "100vh" }}
-        >
+        <Grid container spacing={0} justifyContent="center" sx={{ height: "100vh" }}>
           <Grid
             item
             xs={12}
@@ -35,24 +30,14 @@ function Login2() {
                 zIndex: 1,
                 backgroundColor: "#ffffffd6",
                 width: "100%",
-                maxWidth: "500px"
+                maxWidth: "500px",
               }}
             >
               <Box display="flex" alignItems="center" justifyContent="center">
                 <Logo />
               </Box>
-              <AuthLogin
-                subtitle={
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    justifyContent="center"
-                    mt={3}
-                  >
-                    {/* Puedes agregar contenido aquí si es necesario */}
-                  </Stack>
-                }
-              />
+              {/* Asegúrate de pasar setIsLoggedIn a AuthLogin */}
+              <AuthLogin setIsLoggedIn={setIsLoggedIn} />
             </Card>
           </Grid>
         </Grid>
