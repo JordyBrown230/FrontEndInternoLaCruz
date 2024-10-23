@@ -36,9 +36,9 @@ export default function RootLayout({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Si no está autenticado, mostrar el componente de Login2
-  if (!isLoggedIn) {
-    return <Login2 />;
-  }
+  //if (!isLoggedIn) {
+    //return <Login2 />;
+  //}
 
   // Si está autenticado, mostrar el layout normal
   return (
