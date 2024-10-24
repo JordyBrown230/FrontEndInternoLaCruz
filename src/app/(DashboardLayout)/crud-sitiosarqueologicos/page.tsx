@@ -31,25 +31,33 @@ const validationSchema = Yup.object({
 });
 
 const Municipalidad = () => {
-    const [loading, setLoading] = useState(true);
-    const [archaeologicalSites, setArchaeologicalSites] = useState<ArchaeologicalSite[]>([
-        {
-            id: 1,
-            name: "Monumento Nacional Guayabo, Ruinas Costa Rica",
-            description: "Situado cerca de la hermosa Turrialba se encuentra el Monumento Nacional Guayabo, son unas impresionantes ruinas situadas en medio de la exuberante selva tropical.",
-            latitude: 10.683754,
-            longitude: -85.618924,
-            images: ["https://costarica.org/wp-content/uploads/2014/12/Orosi-Ruins.jpg"]
-        },
-        {
-            id: 2,
-            name: "Cueva Pintada",
-            description: "Cueva con pinturas rupestres bien preservadas.",
-            latitude: 10.671509,
-            longitude: -85.638865,
-            images: ["https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgC0qoAseHeXKc17vcC9uME8HSbS9aHJNJgQzJIpHa9gMnHl_e8BCE38685YIx-AU4wyWsKaYRUgqI_JFgs0QpJC57NhRqxv2os80mvl4v85hU9MzaLm5akFKcjpKHb_pZ_TZ3j7hyphenhyphengxPXO/s1600/2+P1060502+%255B50%2525%255Dfinal.JPG"]
+    const fetchGetAll = async () => {
+        try {
+            const response = await fetch('http://localhost:9000/sit/sitio-arqueologico/listar', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }); 
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok'); // Manejo de errores de red
+            }
+            const data = await response.json(); 
+            console.log(data)
+            setArchaeologicalSites(data.data)
+            setFilteredSites(data.data)
+           
+        } catch (error) {
+            console.error('Error fetching attractions:', error);
+        } finally {
+
         }
-    ]);
+    };
+
+    const [loading, setLoading] = useState(true);
+    const [archaeologicalSites, setArchaeologicalSites] = useState<ArchaeologicalSite[]>([]);
     const [filteredSites, setFilteredSites] = useState<ArchaeologicalSite[]>(archaeologicalSites);
     const [openDialog, setOpenDialog] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -74,7 +82,7 @@ const Municipalidad = () => {
     const handleSave = async (values: Omit<ArchaeologicalSite, 'id'>) => {
         let updatedSites;
         const imageUrls = values.images;
-
+        console.log(values)
         if (currentSite) {
             updatedSites = archaeologicalSites.map(site =>
                 site.id === currentSite.id ? { ...site, ...values, images: imageUrls } : site
@@ -82,7 +90,7 @@ const Municipalidad = () => {
             toast.success('Sitio arqueológico actualizado con éxito');
         } else {
             try {
-                const addResponse = await fetch('http://localhost:9000/sit/sitio-arquelogico/agregar', {
+                const addResponse = await fetch('http://localhost:9000/sit/sitio-arqueologico/agregar', {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
@@ -103,14 +111,14 @@ const Municipalidad = () => {
                         formData.append('images', file); // 'images' es la clave que espera en el backend
                     });
 
-                    const imageUploadResponse = await fetch('http://localhost:9000/sit/sitio-arquelogico/agregar-imagenes/' + newResponse.data.id, {
+                    const imageUploadResponse = await fetch('http://localhost:9000/sit/sitio-arqueologico/agregar-imagenes/' + newResponse.data.id, {
                         method: 'POST',
                         credentials: 'include',
                         body: formData,
                     });
 
                     if (!imageUploadResponse.ok) {
-                        await fetch('http://localhost:9000/sit/sitio-arquelogico/eliminar/' + newResponse.data.id, {
+                        await fetch('http://localhost:9000/sit/sitio-arqueologico/eliminar/' + newResponse.data.id, {
                             method: 'DELETE',
                             credentials: 'include',
                             headers: {
@@ -142,6 +150,7 @@ const Municipalidad = () => {
             const newImages = files.map(file => URL.createObjectURL(file));
             setSelectedImage(event.target.files[0]);
             setPreviewImage(newImages[0]); // Previsualiza la primera imagen seleccionada
+       
         }
     };
 
@@ -152,10 +161,25 @@ const Municipalidad = () => {
 
     const handleDelete = async () => {
         if (currentSite) {
-            const updatedSites = archaeologicalSites.filter(site => site.id !== currentSite.id);
-            setArchaeologicalSites(updatedSites);
-            setFilteredSites(updatedSites);
-            toast.error('Sitio arqueológico eliminado con éxito');
+
+            try {
+                const response = await fetch(`http://localhost:9000/sit/sitio-arqueologico/eliminar/${currentSite.id}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                });
+        
+                if (!response.ok) {
+                    throw new Error('Error al eliminar el archivo');
+                }
+                fetchGetAll();
+                const updatedSites = archaeologicalSites.filter(site => site.id !== currentSite.id);
+                setArchaeologicalSites(updatedSites);
+                setFilteredSites(updatedSites);
+                toast.error('Sitio arqueológico eliminado con éxito');
+            } catch (error) {
+                console.error('Error deleting file:', error);
+                toast.error('Error al eliminar el archivo');
+            }
         }
         handleCloseDialog();
     };
@@ -176,6 +200,7 @@ const Municipalidad = () => {
 
     useEffect(() => {
         AOS.init();
+        fetchGetAll();
         setLoading(false);
     }, []);
 
@@ -338,7 +363,7 @@ const Municipalidad = () => {
                                             startIcon={<PhotoCamera />}
                                         >
                                             Seleccionar Imagen
-                                            <input type="file" accept="image/*" hidden onChange={handleImageChange} />
+                                            <input type="file" accept="image/*" hidden onChange={handleImageChange} multiple />
                                         </Button>
                                         {previewImage && (
                                             <Box ml={2} position="relative">
