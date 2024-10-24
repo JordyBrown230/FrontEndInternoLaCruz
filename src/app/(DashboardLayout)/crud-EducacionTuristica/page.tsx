@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Typography, Grid, Card, CardContent, Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Select, InputLabel, FormControl, Link, List, ListItem, ListItemText } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Launch as LaunchIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Launch as LaunchIcon, Search as SearchIcon, AttachFile as AttachFileIcon, Close as CloseIcon } from '@mui/icons-material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import AOS from 'aos';
@@ -21,6 +21,7 @@ interface EducationalResource {
     category: string;
     publicationDate: string;
     authors: string[];
+    fileUrl?: string;
 }
 
 // Validación con Yup
@@ -71,15 +72,24 @@ const EducationTourism = () => {
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [currentResource, setCurrentResource] = useState<EducationalResource | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [file, setFile] = useState<File | null>(null);
 
     const handleClickOpen = (resource: EducationalResource | null = null) => {
         setCurrentResource(resource);
         setOpenDialog(true);
+        setFile(null); // Resetear el archivo seleccionado
     };
 
     const handleCloseDialog = () => {
         setOpenDialog(false);
         setOpenDeleteDialog(false);
+        setFile(null); // Resetear el archivo seleccionado
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files) {
+            setFile(event.target.files[0]);
+        }
     };
     
     const handleSave = async (values: Omit<EducationalResource, 'id'>) => {
@@ -106,6 +116,15 @@ const EducationTourism = () => {
             updatedResources = [...educationalResources, { id: Date.now(), ...values }] as EducationalResource[];
             toast.success('Recurso agregado con éxito');
         }
+
+        // Simulando carga de archivo
+        if (file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            // Aquí debes hacer la llamada a tu API para subir el archivo
+            // await fetch('/api/upload', { method: 'POST', body: formData });
+        }
+
         setEducationalResources(updatedResources);
         setFilteredResources(updatedResources);
         handleCloseDialog();
@@ -336,7 +355,7 @@ const EducationTourism = () => {
                                                                 ),
                                                             }}
                                                         />
-                                                    )}
+                                                    )} 
                                                 </Field>
                                             ))}
                                             <Button
@@ -351,6 +370,66 @@ const EducationTourism = () => {
                                         </>
                                     )}
                                 </FieldArray>
+
+                                {/* Sección para cargar archivos */}
+                                <Box mt={2}>
+                                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                                        Subir Documento
+                                    </Typography>
+                                    <Button
+                                        variant="outlined"
+                                        component="label"
+                                        startIcon={<AttachFileIcon />}
+                                        sx={{
+                                            borderColor: 'primary.main',
+                                            color: 'primary.main',
+                                            '&:hover': {
+                                                borderColor: 'primary.dark',
+                                                color: 'primary.dark',
+                                            },
+                                        }}
+                                    >
+                                        Seleccionar Archivo
+                                        <input
+                                            accept=".pdf,.doc,.docx,.xls,.xlsx"
+                                            type="file"
+                                            hidden
+                                            onChange={handleFileChange}
+                                        />
+                                    </Button>
+                                    {file && (
+                                        <>
+                                            <Box display="flex" alignItems="center" mt={2}>
+                                                <Typography variant="body2" color="text.secondary" mr={2}>
+                                                    {file.name}
+                                                </Typography>
+                                                <IconButton onClick={() => setFile(null)} aria-label="delete">
+                                                    <CloseIcon />
+                                                </IconButton>
+                                            </Box>
+
+                                            {/* Mostrar vista previa solo para PDFs */}
+                                            {file.type === 'application/pdf' && (
+                                                <Box mt={2} sx={{ border: '1px solid #ddd', borderRadius: 2 }}>
+                                                    <iframe
+                                                        src={URL.createObjectURL(file)}
+                                                        width="100%"
+                                                        height="500px"
+                                                        title="Vista previa del documento"
+                                                    />
+                                                </Box>
+                                            )}
+
+                                            {/* Para otros archivos, simplemente muestra el nombre */}
+                                            {file.type !== 'application/pdf' && (
+                                                <Typography variant="body2" color="text.primary" mt={2}>
+                                                    No se puede previsualizar el archivo, pero se puede subir: {file.name}
+                                                </Typography>
+                                            )}
+                                        </>
+                                    )}
+                                </Box>
+
                             </DialogContent>
                             <DialogActions>
                                 <Button onClick={handleCloseDialog} color="primary">

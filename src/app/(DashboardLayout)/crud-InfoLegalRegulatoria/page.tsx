@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Typography, Grid, Card, CardContent, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, TextField, Link } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Launch as LaunchIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Launch as LaunchIcon, Search as SearchIcon, AttachFile as AttachFileIcon } from '@mui/icons-material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import AOS from 'aos';
@@ -11,20 +11,22 @@ import * as Yup from 'yup';
 import { toast, Toaster } from 'react-hot-toast';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // Importa el estilo de Quill
+import { Close as CloseIcon } from '@mui/icons-material';
 
 // Interfaz de la información legal y regulatoria
 interface LegalInfo {
     id: number;
     title: string;
     description: string;
-    website?: string; // Sitio web opcional
+    website?: string;
+    fileUrl?: string; // URL del archivo adjunto
 }
 
 // Validación con Yup
 const validationSchema = Yup.object({
     title: Yup.string().required('Título es obligatorio'),
     description: Yup.string().required('Descripción es obligatoria'),
-    website: Yup.string().url('URL inválida').notRequired(), 
+    website: Yup.string().url('URL inválida').notRequired(),
 });
 
 const Municipalidad = () => {
@@ -36,15 +38,13 @@ const Municipalidad = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            }); 
-            //console.log(await response.json())
+            });
             if (!response.ok) {
-                throw new Error('Network response was not ok'); // Manejo de errores de red
+                throw new Error('Network response was not ok');
             }
-            const data = await response.json(); 
-            //setData(data); 
-            setLegalInfos(data.data)
-            setFilteredLegalInfos(data.data)
+            const data = await response.json();
+            setLegalInfos(data.data);
+            setFilteredLegalInfos(data.data);
         } catch (error) {
             console.error('Error fetching attractions:', error);
         } finally {
@@ -55,6 +55,7 @@ const Municipalidad = () => {
     useEffect(() => {
         AOS.init(); fetchAttractions();
     }, []);
+
     const [loading, setLoading] = useState(true);
     const [legalInfos, setLegalInfos] = useState<LegalInfo[]>([]);
     const [filteredLegalInfos, setFilteredLegalInfos] = useState<LegalInfo[]>([]);
@@ -62,6 +63,7 @@ const Municipalidad = () => {
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [currentInfo, setCurrentInfo] = useState<LegalInfo | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [file, setFile] = useState<File | null>(null);
 
     const handleClickOpen = (info: LegalInfo | null = null) => {
         setCurrentInfo(info);
@@ -73,17 +75,20 @@ const Municipalidad = () => {
         setOpenDeleteDialog(false);
     };
 
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files) {
+            setFile(event.target.files[0]);
+        }
+    };
+
     const handleSave = async (values: Omit<LegalInfo, 'id'>) => {
         let updatedInfos;
         if (currentInfo) {
-
             updatedInfos = legalInfos.map(info =>
                 info.id === currentInfo.id ? { ...info, ...values } : info
             );
-            toast.success('Información actualizada con éxito'); // Notificación de éxito
+            toast.success('Información actualizada con éxito');
         } else {
-            console.log('hola')
-            // Agregar nueva información
             const response = await fetch('http://localhost:9000/sit/info-legal-regulatoria/agregar', {
                 method: 'POST',
                 credentials: 'include',
@@ -98,8 +103,17 @@ const Municipalidad = () => {
             }
 
             updatedInfos = [...legalInfos, { id: Date.now(), ...values }] as LegalInfo[];
-            toast.success('Información agregada con éxito'); // Notificación de éxito
+            toast.success('Información agregada con éxito');
         }
+
+        // Simulando carga de archivo
+        if (file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            // Aquí debes hacer la llamada a tu API para subir el archivo
+            // await fetch('/api/upload', { method: 'POST', body: formData });
+        }
+
         setLegalInfos(updatedInfos);
         setFilteredLegalInfos(updatedInfos);
         handleCloseDialog();
@@ -116,20 +130,17 @@ const Municipalidad = () => {
                     },
                 });
 
-                // Verifica si la respuesta fue exitosa
                 if (!response.ok) {
                     throw new Error('Error al eliminar la información');
                 }
                 const updatedInfos = legalInfos.filter(info => info.id !== currentInfo.id);
                 setLegalInfos(updatedInfos);
                 setFilteredLegalInfos(updatedInfos);
-                toast.error('Información eliminada con éxito'); // Notificación de eliminación
+                toast.error('Información eliminada con éxito');
             } catch (error) {
                 console.error('Error al eliminar la información:', error);
-                toast.error('Hubo un problema al eliminar la información'); // Manejo del error
+                toast.error('Hubo un problema al eliminar la información');
             }
-
-
         }
         handleCloseDialog();
     };
@@ -139,7 +150,6 @@ const Municipalidad = () => {
         setOpenDeleteDialog(true);
     };
 
-    // Función para manejar la búsqueda
     const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const query = event.target.value.toLowerCase();
         setSearchQuery(query);
@@ -153,7 +163,7 @@ const Municipalidad = () => {
         <PageContainer title="Información Legal y Regulatoria" description="Proveer información sobre normativas locales relacionadas con el turismo.">
             <DashboardCard title="">
                 <Box>
-                    <Toaster /> {/* Agregar Toaster para mostrar notificaciones */}
+                    <Toaster />
                     <Box textAlign="center" mb={4}>
                         <Typography variant="h2" gutterBottom data-aos="fade-down">Información Legal y Regulatoria</Typography>
                         <Typography variant="h6" color="text.secondary" data-aos="fade-down">Administra la información sobre normativas locales relacionadas con el turismo.</Typography>
@@ -163,7 +173,6 @@ const Municipalidad = () => {
                         </Button>
                     </Box>
 
-                    {/* Campo de búsqueda */}
                     <TextField
                         label="Buscar por título"
                         variant="outlined"
@@ -173,10 +182,7 @@ const Municipalidad = () => {
                             endAdornment: <SearchIcon />,
                         }}
                         fullWidth
-                        sx={{ 
-                            mb: 4,
-                            maxWidth: 400
-                         }}
+                        sx={{ mb: 4, maxWidth: 400 }}
                     />
 
                     <Grid container spacing={4} justifyContent="center">
@@ -190,7 +196,7 @@ const Municipalidad = () => {
                                         <Box
                                             component="div"
                                             dangerouslySetInnerHTML={{ __html: info.description }}
-                                            sx={{ whiteSpace: 'pre-wrap' }} // Mantiene los saltos de línea y el formato
+                                            sx={{ whiteSpace: 'pre-wrap' }}
                                         />
                                         {info.website && (
                                             <Box mt={2}>
@@ -203,6 +209,20 @@ const Municipalidad = () => {
                                                     startIcon={<LaunchIcon />}
                                                 >
                                                     Sitio Web
+                                                </Button>
+                                            </Box>
+                                        )}
+                                        {info.fileUrl && (
+                                            <Box mt={2}>
+                                                <Button
+                                                    component={Link}
+                                                    href={info.fileUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    variant="outlined"
+                                                    startIcon={<AttachFileIcon />}
+                                                >
+                                                    Ver Documento
                                                 </Button>
                                             </Box>
                                         )}
@@ -222,7 +242,6 @@ const Municipalidad = () => {
                 </Box>
             </DashboardCard>
 
-            {/* Dialog para agregar/editar información */}
             <Dialog open={openDialog} onClose={handleCloseDialog}>
                 <DialogTitle>{currentInfo ? 'Editar Información' : 'Agregar Nueva Información'}</DialogTitle>
                 <Formik
@@ -273,6 +292,66 @@ const Municipalidad = () => {
                                         />
                                     )}
                                 </Field>
+
+                                <Box mt={2}>
+                                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                                        Subir Documento
+                                    </Typography>
+                                    <Button
+                                        variant="outlined"
+                                        component="label"
+                                        startIcon={<AttachFileIcon />}
+                                        sx={{
+                                            borderColor: 'primary.main',
+                                            color: 'primary.main',
+                                            '&:hover': {
+                                                borderColor: 'primary.dark',
+                                                color: 'primary.dark',
+                                            },
+                                        }}
+                                    >
+                                        Seleccionar Archivo
+                                        <input
+                                            accept=".pdf,.doc,.docx,.xls,.xlsx"
+                                            type="file"
+                                            hidden
+                                            onChange={handleFileChange}
+                                        />
+                                    </Button>
+
+                                    {file && (
+                                        <>
+                                            <Box display="flex" alignItems="center" mt={2}>
+                                                <Typography variant="body2" color="text.secondary" mr={2}>
+                                                    {file.name}
+                                                </Typography>
+                                                <IconButton onClick={() => setFile(null)} aria-label="delete">
+                                                    <CloseIcon />
+                                                </IconButton>
+                                            </Box>
+
+                                            {/* Mostrar vista previa solo para PDFs */}
+                                            {file.type === 'application/pdf' && (
+                                                <Box mt={2} sx={{ border: '1px solid #ddd', borderRadius: 2 }}>
+                                                    <iframe
+                                                        src={URL.createObjectURL(file)}
+                                                        width="100%"
+                                                        height="500px"
+                                                        title="Vista previa del documento"
+                                                    />
+                                                </Box>
+                                            )}
+
+                                            {/* Para otros archivos, simplemente muestra el nombre */}
+                                            {file.type !== 'application/pdf' && (
+                                                <Typography variant="body2" color="text.primary" mt={2}>
+                                                    No se puede previsualizar el archivo, pero se puede subir: {file.name}
+                                                </Typography>
+                                            )}
+                                        </>
+                                    )}
+                                </Box>
+
                             </DialogContent>
                             <DialogActions>
                                 <Button onClick={handleCloseDialog}>Cancelar</Button>
@@ -285,7 +364,6 @@ const Municipalidad = () => {
                 </Formik>
             </Dialog>
 
-            {/* Dialog para confirmar eliminación */}
             <Dialog open={openDeleteDialog} onClose={handleCloseDialog}>
                 <DialogTitle>¿Eliminar Información?</DialogTitle>
                 <DialogActions>
