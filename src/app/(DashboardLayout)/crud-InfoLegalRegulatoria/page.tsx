@@ -43,6 +43,7 @@ const Municipalidad = () => {
                 throw new Error('Network response was not ok');
             }
             const data = await response.json();
+            console.log(data)
             setLegalInfos(data.data);
             setFilteredLegalInfos(data.data);
         } catch (error) {
@@ -101,17 +102,35 @@ const Municipalidad = () => {
             if (!response.ok) {
                 throw new Error('Error al agregar el recurso');
             }
+            const newResponse = await response.json();
+            // Simulando carga de archivo
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const imageUploadResponse = await fetch('http://localhost:9000/sit/info-legal-regulatoria/agregar-archivo/' + newResponse.data.id, {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData,
+                });
+
+                // Si la subida de imágenes falla, se elimina el transporte previamente agregado
+                if (!imageUploadResponse.ok) {
+                    await fetch('http://localhost:9000/sit/info-legal-regulatoria/eliminar/' + newResponse.data.id, {
+                        method: 'DELETE',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const errorData = await imageUploadResponse.json();
+                    throw new Error(`Error al subir imágenes: ${errorData.message || 'Error desconocido'}`);
+                }
+            }
 
             updatedInfos = [...legalInfos, { id: Date.now(), ...values }] as LegalInfo[];
             toast.success('Información agregada con éxito');
-        }
-
-        // Simulando carga de archivo
-        if (file) {
-            const formData = new FormData();
-            formData.append('file', file);
-            // Aquí debes hacer la llamada a tu API para subir el archivo
-            // await fetch('/api/upload', { method: 'POST', body: formData });
         }
 
         setLegalInfos(updatedInfos);
@@ -212,18 +231,21 @@ const Municipalidad = () => {
                                                 </Button>
                                             </Box>
                                         )}
-                                        {info.fileUrl && (
+                                        {info.document_files && info.document_files.length > 0 && (
                                             <Box mt={2}>
-                                                <Button
-                                                    component={Link}
-                                                    href={info.fileUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    variant="outlined"
-                                                    startIcon={<AttachFileIcon />}
-                                                >
-                                                    Ver Documento
-                                                </Button>
+                                                {info.document_files.map((file) => (
+                                                    <Button
+                                                        key={file.id}
+                                                        component={Link}
+                                                        href={`http://localhost:9000/${file.filePath}`} // Asegúrate de que la ruta sea correcta
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        variant="outlined"
+                                                        startIcon={<AttachFileIcon />}
+                                                    >
+                                                        Ver Documento: {file.filename}
+                                                    </Button>
+                                                ))}
                                             </Box>
                                         )}
                                         <Box mt={2}>
