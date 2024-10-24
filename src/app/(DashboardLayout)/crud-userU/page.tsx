@@ -1,12 +1,10 @@
 'use client';
-import { Typography, Grid, CardContent, TextField, Button, Box, Checkbox, FormControlLabel, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Typography, Grid, CardContent, TextField, Button, Box, Checkbox, FormControlLabel, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, SxProps } from '@mui/material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import { useEffect, useState, ChangeEvent, FormEvent } from 'react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { first } from 'lodash';
-
 interface User {
   user_id: number;
   first_name: string;
@@ -23,6 +21,7 @@ interface User {
   };
 }
 
+
 const Municipalidad: React.FC = () => {
   const fetchAttractions = async () => {
     try {
@@ -32,16 +31,12 @@ const Municipalidad: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-      }); // Reemplaza con la URL de tu API
-      //console.log(await response.json())
+      });
       if (!response.ok) {
-        throw new Error('Network response was not ok'); // Manejo de errores de red
+        throw new Error('Network response was not ok');
       }
-      const data = await response.json(); // Asume que la API devuelve un JSON
-      //setData(data); // Asigna los datos de la API al estado
-      console.log(data.users)
-      setUsers(data.users)
-      // setFormData(data)
+      const data = await response.json();
+      setUsers(data.users);
     } catch (error) {
       console.error('Error fetching attractions:', error);
     } finally {
@@ -49,10 +44,7 @@ const Municipalidad: React.FC = () => {
     }
   };
 
-  const [users, setUsers] = useState<User[]>([
-
-  ]);
-
+  const [users, setUsers] = useState<User[]>([]);
   const [formData, setFormData] = useState<User>({
     user_id: 0,
     first_name: '',
@@ -70,13 +62,13 @@ const Municipalidad: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null); // Para seleccionar un solo usuario
-  const [openConfirmDialog, setOpenConfirmDialog] = useState(false); // Estado para el diálogo de confirmación
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [openFormDialog, setOpenFormDialog] = useState(false); // Formulario emergente
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false); // Diálogo de confirmación
 
   useEffect(() => {
-    AOS.init();
-
-    fetchAttractions()
+    AOS.init({ duration: 1000 });
+    fetchAttractions();
   }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -109,8 +101,8 @@ const Municipalidad: React.FC = () => {
         last_name: formData.Person.last_name,
         cedula: formData.Person.cedula
       }
-    }
-    
+    };
+
     try {
       const method = isEditing ? 'PUT' : 'POST';
       const url = isEditing
@@ -129,11 +121,9 @@ const Municipalidad: React.FC = () => {
         const user = await response.json();
 
         if (isEditing) {
-          // Update user in the list
           setUsers(users.map((u) => (u.user_id === user.user_id ? user : u)));
           setIsEditing(false);
         } else {
-          // Add new user to the list
           setUsers([...users, user]);
         }
 
@@ -152,11 +142,12 @@ const Municipalidad: React.FC = () => {
             cedula: '',
           }
         });
-        setSelectedUserId(null); // Limpiar selección
-        fetchAttractions()
+        setSelectedUserId(null);
+        fetchAttractions();
       } else {
         console.error('Error creating or updating user');
       }
+      setOpenFormDialog(false); // Cerrar el formulario emergente después de guardar
     } catch (error) {
       console.error('Error:', error);
     }
@@ -168,6 +159,7 @@ const Municipalidad: React.FC = () => {
       if (user) {
         setFormData(user);
         setIsEditing(true);
+        setOpenFormDialog(true); // Abrir formulario emergente para editar
       }
     }
   };
@@ -182,8 +174,8 @@ const Municipalidad: React.FC = () => {
 
         if (response.ok) {
           setUsers(users.filter((user) => user.user_id !== selectedUserId));
-          setSelectedUserId(null); // Limpiar selección después de borrar
-          setOpenConfirmDialog(false); // Cerrar el diálogo de confirmación
+          setSelectedUserId(null);
+          setOpenConfirmDialog(false);
         } else {
           console.error('Error deleting user');
         }
@@ -194,11 +186,11 @@ const Municipalidad: React.FC = () => {
   };
 
   const handleDeleteClick = () => {
-    setOpenConfirmDialog(true); // Abrir el diálogo de confirmación
+    setOpenConfirmDialog(true);
   };
 
   const handleCloseDialog = () => {
-    setOpenConfirmDialog(false); // Cerrar el diálogo sin eliminar
+    setOpenConfirmDialog(false);
   };
 
   const handleCheckboxChange = (id: number) => {
@@ -207,16 +199,87 @@ const Municipalidad: React.FC = () => {
 
   return (
     <PageContainer title="CRUD Usuarios" description="Una vista con un CRUD de usuarios">
+      <Box textAlign="center" mb={4}>
+                        <Typography variant="h2" gutterBottom data-aos="fade-down">Gestión de Usuarios</Typography>
+                        <Typography variant="h6" color="text.secondary" data-aos="fade-down">Administra los usuarios que entran al Sistema SIT.</Typography>           
+      </Box>
       <Grid container spacing={3}>
-        {/* Formulario para crear o editar usuario */}
-        <Grid item xs={12}>
-          <Box>
-            <Typography variant="h4" gutterBottom align="center">
-              Gestión de Usuarios
-            </Typography>
-            <Typography variant="h6" component="div" mb={2}>
-              {isEditing ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
-            </Typography>
+        {/* Botones de acción */}
+        <Grid item xs={12} sx={{ textAlign: 'center', mb: 4 }} data-aos="fade-up">
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => { setOpenFormDialog(true); setIsEditing(false); }}
+          >
+            Crear Nuevo Usuario
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handleEdit}
+            disabled={selectedUserId === null}
+            sx={{ mx: 2 }}
+          >
+            Actualizar Usuario
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleDeleteClick}
+            disabled={selectedUserId === null}
+          >
+            Eliminar Usuario
+          </Button>
+        </Grid>
+
+        {/* Listado de usuarios existentes */}
+        <Grid item xs={12} data-aos="fade-up">
+          <Typography variant="h6" component="div" mb={2} color="primary">
+            Usuarios Registrados
+          </Typography>
+          <Grid container spacing={3}>
+            {users.length > 0 ? (
+              users.map((user) => {
+                const person = user.Person || {};
+                return (
+                  <Grid item xs={12} sm={6} md={4} lg={3} key={user.user_id}>
+                    <DashboardCard>
+                      <CardContent>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={selectedUserId === user.user_id}
+                              onChange={() => handleCheckboxChange(user.user_id)}
+                            />
+                          }
+                          label={`${person.first_name || 'N/A'} ${person.last_name || 'N/A'}`}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                          Cédula: {person.cedula || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Usuario: {user.username || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Email: {user.email || 'N/A'}
+                        </Typography>
+                      </CardContent>
+                    </DashboardCard>
+                  </Grid>
+                );
+              })
+            ) : (
+              <Typography variant="h6" textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
+                No hay usuarios registrados.
+              </Typography>
+            )}
+          </Grid>
+        </Grid>
+
+        {/* Formulario emergente para crear/editar usuario */}
+        <Dialog open={openFormDialog} onClose={() => setOpenFormDialog(false)}>
+          <DialogTitle>{isEditing ? 'Editar Usuario' : 'Crear Nuevo Usuario'}</DialogTitle>
+          <DialogContent>
             <form onSubmit={handleSubmit}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
@@ -284,110 +347,45 @@ const Municipalidad: React.FC = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    disabled={isEditing} // Desactivar el campo si se está editando
-                    required={!isEditing} // Requerir solo si no se está editando
+                    disabled={isEditing}
+                    required={!isEditing}
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <Button type="submit" variant="contained" color="primary" fullWidth>
-                    {isEditing ? 'Actualizar Usuario' : 'Crear Usuario'}
-                  </Button>
-                </Grid>
               </Grid>
-              <br></br>
-              <br></br>
             </form>
-            {/* Listado de usuarios existentes */}
-            <Grid item xs={12}>
-              <br></br>
-              <br></br>
-              <Typography variant="h6" component="div" mb={2}>
-                Usuarios Registrados
-              </Typography>
-              {/* Botones de Acción */}
-              <Grid item xs={12} sx={{ mt: 4, textAlign: 'center' }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleEdit}
-                  disabled={selectedUserId === null}
-                  sx={{ mr: 2 }}
-                >
-                  Actualizar
-                </Button>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={handleDeleteClick} // Cambiado para abrir el diálogo
-                  disabled={selectedUserId === null}
-                >
-                  Eliminar
-                </Button>
-                <br></br>
-                <br></br>
-              </Grid>
-              <Grid container spacing={3}>
-                {users.length > 0 ? (
-                  users.map((user) => {
-                    const person = user.Person || {}; // Asigna un objeto vacío si es null
-                    return (
-                      <Grid item xs={12} sm={6} md={4} lg={3} key={user.user_id}>
-                        <DashboardCard>
-                          <CardContent>
-                            <FormControlLabel
-                              control={
-                                <Checkbox
-                                  checked={selectedUserId === user.user_id}
-                                  onChange={() => handleCheckboxChange(user.user_id)}
-                                />
-                              }
-                              label={`${person.first_name || 'N/A'} ${person.last_name || 'N/A'}`}
-                            />
-                            <Typography variant="body2" color="text.secondary">
-                              Cédula: {person.cedula || 'N/A'}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Usuario: {user.username || 'N/A'}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Email: {user.email || 'N/A'}
-                            </Typography>
-                          </CardContent>
-                        </DashboardCard>
-                      </Grid>
-                    );
-                  })
-                ) : (
-                  <Typography variant="h6" textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
-                    No hay usuarios registrados.
-                  </Typography>
-                )}
-              </Grid>
-            </Grid>
-          </Box>
-        </Grid>
-      </Grid>
+          </DialogContent>
+          <form onSubmit={handleSubmit}>
+            {/* Resto del formulario */}
+            <DialogActions>
+              <Button onClick={() => setOpenFormDialog(false)} color="primary">
+                Cancelar
+              </Button>
+              <Button type="submit" color="primary">
+                {isEditing ? 'Actualizar' : 'Crear'}
+              </Button>
+            </DialogActions>
+          </form>
 
-      {/* Diálogo de confirmación */}
-      <Dialog
-        open={openConfirmDialog}
-        onClose={handleCloseDialog}
-      >
-        <DialogTitle>Confirmar Eliminación</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            ¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="primary">
-            Cancelar
-          </Button>
-          <Button onClick={handleDelete} color="secondary">
-            Eliminar
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Dialog>
+
+        {/* Diálogo de confirmación */}
+        <Dialog open={openConfirmDialog} onClose={handleCloseDialog}>
+          <DialogTitle>Confirmar Eliminación</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              ¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog} color="primary">
+              Cancelar
+            </Button>
+            <Button onClick={handleDelete} color="secondary">
+              Eliminar
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Grid>
     </PageContainer>
   );
 };
