@@ -114,16 +114,7 @@ const Perfil = () => {
           <ListItemText>Mi Cuenta</ListItemText>
         </MenuItem>
         */}
-        <Box mt={1} py={1} px={2}>
-          <Button
-            href="/authentication/login"
-            variant="outlined"
-            color="primary"
-            fullWidth
-          >
-            Cerrar Sesión
-          </Button>
-        </Box>
+        
       </Menu>
 
       {/* Diálogo de Perfil */}
