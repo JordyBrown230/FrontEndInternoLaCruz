@@ -1,4 +1,4 @@
-import { IconAccessibleOff, IconAccessibleOffFilled, IconAlertOctagon, IconBone, IconCursorText, IconParachute, IconPrescription, IconUser, IconUserBolt, IconUserDollar, IconUserEdit } from "@tabler/icons-react";
+import { IconAccessibleOff, IconAccessibleOffFilled, IconAlertOctagon, IconBone, IconCursorText, IconParachute, IconPlane, IconPrescription, IconUser, IconUserBolt, IconUserDollar, IconUserEdit } from "@tabler/icons-react";
 import {
   IconHome,
   IconBuilding,
@@ -69,6 +69,12 @@ const Menuitems = [
     title: "Sitios Arqueológicos",
     icon: IconBone,
     href: "/crud-sitiosarqueologicos",
+  },
+  {
+    id: uniqueId(),
+    title: "Sitios Arqueológicos",
+    icon: IconPlane,
+    href: "/crud-guiaViaje",
   },
 ];
 
