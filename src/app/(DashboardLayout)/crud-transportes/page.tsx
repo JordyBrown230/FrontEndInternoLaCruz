@@ -207,7 +207,7 @@ const Municipalidad = () => {
     };
 
     return (
-        <PageContainer title="Transporte" description="Gestiona la información sobre cómo llegar al cantón, transporte público, alquiler de vehículos, etc.">
+        <PageContainer title="Transporte">
             <DashboardCard title="">
                 <Box>
                     <Toaster /> {/* Agregar Toaster para mostrar notificaciones */}
