@@ -39,16 +39,16 @@ const Municipalidad = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            }); 
+            });
 
             if (!response.ok) {
                 throw new Error('Network response was not ok'); // Manejo de errores de red
             }
-            const data = await response.json(); 
+            const data = await response.json();
             console.log(data)
             setArchaeologicalSites(data.data)
             setFilteredSites(data.data)
-           
+
         } catch (error) {
             console.error('Error fetching attractions:', error);
         } finally {
@@ -82,12 +82,15 @@ const Municipalidad = () => {
     const handleSave = async (values: Omit<ArchaeologicalSite, 'id'>) => {
         let updatedSites;
         const imageUrls = values.images;
-        console.log(values)
+        console.log(values.images)
+
+        console.log(selectedImage)
         if (currentSite) {
             updatedSites = archaeologicalSites.map(site =>
                 site.id === currentSite.id ? { ...site, ...values, images: imageUrls } : site
             );
             toast.success('Sitio arqueológico actualizado con éxito');
+
         } else {
             try {
                 const addResponse = await fetch('http://localhost:9000/sit/sitio-arqueologico/agregar', {
@@ -104,12 +107,11 @@ const Municipalidad = () => {
                 }
 
                 const newResponse = await addResponse.json();
-
-                if (values.images.length !== 0) {
+                console.log(newResponse)
+                if (selectedImage) {
                     const formData = new FormData();
-                    values.images.forEach((file) => {
-                        formData.append('images', file); // 'images' es la clave que espera en el backend
-                    });
+                    formData.append('images', selectedImage); // 'images' es la clave que espera en el backend
+
 
                     const imageUploadResponse = await fetch('http://localhost:9000/sit/sitio-arqueologico/agregar-imagenes/' + newResponse.data.id, {
                         method: 'POST',
@@ -117,7 +119,9 @@ const Municipalidad = () => {
                         body: formData,
                     });
 
+                    console.log(imageUploadResponse)
                     if (!imageUploadResponse.ok) {
+                        console.log(imageUploadResponse)
                         await fetch('http://localhost:9000/sit/sitio-arqueologico/eliminar/' + newResponse.data.id, {
                             method: 'DELETE',
                             credentials: 'include',
@@ -139,6 +143,7 @@ const Municipalidad = () => {
                 return;
             }
         }
+        fetchGetAll()
         setArchaeologicalSites(updatedSites);
         setFilteredSites(updatedSites);
         handleCloseDialog();
@@ -150,7 +155,6 @@ const Municipalidad = () => {
             const newImages = files.map(file => URL.createObjectURL(file));
             setSelectedImage(event.target.files[0]);
             setPreviewImage(newImages[0]); // Previsualiza la primera imagen seleccionada
-       
         }
     };
 
@@ -167,7 +171,7 @@ const Municipalidad = () => {
                     method: 'DELETE',
                     credentials: 'include',
                 });
-        
+
                 if (!response.ok) {
                     throw new Error('Error al eliminar el archivo');
                 }
@@ -243,9 +247,13 @@ const Municipalidad = () => {
                                             dangerouslySetInnerHTML={{ __html: site.description }}
                                             sx={{ whiteSpace: 'pre-wrap' }}
                                         />
-                                        {site.images && (
+                                        {site.Images && site.Images.length > 0 && (
                                             <Box mt={2}>
-                                                <img src={site.images[0]} alt={site.name} style={{ maxWidth: '100%' }} />
+                                                <img
+                                                    src={site.Images[0].url} // Muestra la primera imagen
+                                                    alt={site.name}
+                                                    style={{ maxWidth: '100%', borderRadius: '8px' }} // Estilo opcional
+                                                />
                                             </Box>
                                         )}
                                         <Box mt={2}>

@@ -55,7 +55,7 @@ export default function RootLayout({ children }: Props) {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:9000/sit/cerrar-sesion', {
+      const response = await fetch('http://localhost:9000/sit/session/logout', {
         method: 'POST',
         credentials: 'include',
         headers: {

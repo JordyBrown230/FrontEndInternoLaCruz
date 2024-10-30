@@ -100,7 +100,7 @@ const EducationTourism = () => {
             );
             toast.success('Recurso actualizado con éxito');
         } else {
-            const response = await fetch('http://localhost:9000/sit//educacion-turistica/agregar', {
+            const response = await fetch('http://localhost:9000/sit/educacion-turistica/agregar', {
                 method: 'POST',
                 credentials: 'include', 
                 headers: {
@@ -112,19 +112,38 @@ const EducationTourism = () => {
             if (!response.ok) {
                 throw new Error('Error al agregar el recurso');
             }
+            const newResponse = await response.json();
+
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+    
+                const imageUploadResponse = await fetch('http://localhost:9000/sit/educacion-turistica/agregar-archivo/' + newResponse.data.id, {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData,
+                });
+    
+                if (!imageUploadResponse.ok) {
+                    await fetch('http://localhost:9000/sit/educacion-turistica/eliminar/' + newResponse.data.id, {
+                        method: 'DELETE',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+    
+                    const errorData = await imageUploadResponse.json();
+                    throw new Error(`Error al subir imágenes: ${errorData.message || 'Error desconocido'}`);
+                }
+            }    
 
             updatedResources = [...educationalResources, { id: Date.now(), ...values }] as EducationalResource[];
             toast.success('Recurso agregado con éxito');
         }
 
         // Simulando carga de archivo
-        if (file) {
-            const formData = new FormData();
-            formData.append('file', file);
-            // Aquí debes hacer la llamada a tu API para subir el archivo
-            // await fetch('/api/upload', { method: 'POST', body: formData });
-        }
-
+ 
         setEducationalResources(updatedResources);
         setFilteredResources(updatedResources);
         handleCloseDialog();
@@ -233,6 +252,23 @@ const EducationTourism = () => {
                                                 >
                                                     Ver Recurso
                                                 </Button>
+                                            </Box>
+                                        )}
+                                         {resource.document_files && resource.document_files.length > 0 && (
+                                            <Box mt={2}>
+                                                {resource.document_files.map((file) => (
+                                                    <Button
+                                                        key={file.id}
+                                                        component={Link}
+                                                        href={`http://localhost:9000/${file.filePath}`} // Asegúrate de que la ruta sea correcta
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        variant="outlined"
+                                                        startIcon={<AttachFileIcon />}
+                                                    >
+                                                        Ver Documento: {file.filename}
+                                                    </Button>
+                                                ))}
                                             </Box>
                                         )}
                                         <Box mt={2}>
