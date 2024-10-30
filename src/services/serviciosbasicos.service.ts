@@ -69,7 +69,9 @@
     }
 
     try {
-        const response = await axiosApi.post('/servicios-basicos', formData);
+        const response = servicioData.idServicioBasico
+        ? await axiosApi.put(`/servicios-basicos/${servicioData.idServicioBasico}`, formData)
+        : await axiosApi.post('/servicios-basicos', formData);
         return response.data;
     } catch (error) {
         console.error('Error creating/updating servicio basico:', error);

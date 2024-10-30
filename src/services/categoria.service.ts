@@ -24,3 +24,13 @@ export const createCategoria = async (categoriaData: Omit<Categoria, 'idCategori
     throw error;
   }
 };
+
+export const deleteCategoria = async (id:any) => {
+  try {
+    const response = await axiosApi.delete(`/categorias/${id}`);
+    return response.data; 
+  } catch (error) {
+    console.error("Error al eliminar la categoría:", error);
+    throw error; 
+  }
+};

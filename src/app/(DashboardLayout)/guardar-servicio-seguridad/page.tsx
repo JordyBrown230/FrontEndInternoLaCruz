@@ -20,6 +20,11 @@ const FormContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(5),
 }));
 
+// Expresiones regulares para validaciones
+const nombreRegex = /^[A-Za-zÀ-ÿñÑ\s]+$/;
+const telefonoRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]{7,}$/;
+const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
+
 const ServicioSeguridadForm: React.FC = () => {
   const [nombre, setNombre] = useState('');
   const [direccion, setDireccion] = useState('');
@@ -31,6 +36,14 @@ const ServicioSeguridadForm: React.FC = () => {
   const [website, setWebsite] = useState('');
   const [foto, setFoto] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [errors, setErrors] = useState({
+    nombre: '',
+    descripcion: '',
+    telefono: '',
+    urlWaze: '',
+    urlGoogleMaps: '',
+    website: ''
+  });
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -63,20 +76,70 @@ const ServicioSeguridadForm: React.FC = () => {
     }
   };
 
+  const handleNombreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNombre(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      nombre: nombreRegex.test(value) ? '' : 'El nombre solo puede contener letras y espacios.',
+    }));
+  };
+
+  const handleDescripcionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDescripcion(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      descripcion: value.trim() !== '' ? '' : 'La descripción es obligatoria.',
+    }));
+  };
+
+  const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTelefono(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      telefono: telefonoRegex.test(value) ? '' : 'El teléfono no es válido.',
+    }));
+  };
+
+  const handleUrlWazeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUrlWaze(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      urlWaze: value === '' || urlRegex.test(value) ? '' : 'URL de Waze no válida.',
+    }));
+  };
+
+  const handleUrlGoogleMapsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUrlGoogleMaps(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      urlGoogleMaps: value === '' || urlRegex.test(value) ? '' : 'URL de Google Maps no válida.',
+    }));
+  };
+
+  const handleWebsiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setWebsite(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      website: value === '' || urlRegex.test(value) ? '' : 'URL de Website no válida.',
+    }));
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setFoto(file);
-    if (file) {
-      setFilePreview(URL.createObjectURL(file));
-    } else {
-      setFilePreview(null);
-    }
+    setFilePreview(file ? URL.createObjectURL(file) : null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nombre || !descripcion || !telefono) {
-      message.error('Por favor, completa todos los campos obligatorios.');
+    if (Object.values(errors).some((error) => error !== '') || !nombre || !descripcion || !telefono) {
+      message.error('Por favor, corrige los errores en el formulario.');
       return;
     }
 
@@ -112,6 +175,7 @@ const ServicioSeguridadForm: React.FC = () => {
     setWebsite('');
     setFoto(null);
     setFilePreview(null);
+    setErrors({ nombre: '', descripcion: '', telefono: '', urlWaze: '', urlGoogleMaps: '', website: '' });
   };
 
   const handleRemoveFoto = () => {
@@ -132,7 +196,9 @@ const ServicioSeguridadForm: React.FC = () => {
                 label="Nombre"
                 fullWidth
                 value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
+                onChange={handleNombreChange}
+                error={Boolean(errors.nombre)}
+                helperText={errors.nombre}
                 required
               />
             </Grid>
@@ -152,7 +218,9 @@ const ServicioSeguridadForm: React.FC = () => {
                 required
                 rows={4}
                 value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
+                onChange={handleDescripcionChange}
+                error={Boolean(errors.descripcion)}
+                helperText={errors.descripcion}
               />
             </Grid>
             <Grid item xs={12}>
@@ -160,7 +228,9 @@ const ServicioSeguridadForm: React.FC = () => {
                 label="Teléfono"
                 fullWidth
                 value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
+                onChange={handleTelefonoChange}
+                error={Boolean(errors.telefono)}
+                helperText={errors.telefono}
                 required
               />
             </Grid>
@@ -177,7 +247,9 @@ const ServicioSeguridadForm: React.FC = () => {
                 label="URL Waze"
                 fullWidth
                 value={urlWaze}
-                onChange={(e) => setUrlWaze(e.target.value)}
+                onChange={handleUrlWazeChange}
+                error={Boolean(errors.urlWaze)}
+                helperText={errors.urlWaze}
               />
             </Grid>
             <Grid item xs={12}>
@@ -185,7 +257,9 @@ const ServicioSeguridadForm: React.FC = () => {
                 label="URL Google Maps"
                 fullWidth
                 value={urlGoogleMaps}
-                onChange={(e) => setUrlGoogleMaps(e.target.value)}
+                onChange={handleUrlGoogleMapsChange}
+                error={Boolean(errors.urlGoogleMaps)}
+                helperText={errors.urlGoogleMaps}
               />
             </Grid>
             <Grid item xs={12}>
@@ -193,11 +267,11 @@ const ServicioSeguridadForm: React.FC = () => {
                 label="Website"
                 fullWidth
                 value={website}
-                onChange={(e) => setWebsite(e.target.value)}
+                onChange={handleWebsiteChange}
+                error={Boolean(errors.website)}
+                helperText={errors.website}
               />
             </Grid>
-
-            {/* File upload */}
             <Grid item xs={12}>
               <Button variant="contained" component="label">
                 Subir Foto
@@ -219,10 +293,14 @@ const ServicioSeguridadForm: React.FC = () => {
                 </Grid>
               )}
             </Grid>
-
-            {/* Botón para Enviar el Formulario */}
             <Grid item xs={12}>
-              <Button type="submit" variant="contained" color="primary" fullWidth>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+                disabled={Object.values(errors).some((error) => error !== '') || !nombre || !descripcion || !telefono}
+              >
                 Guardar
               </Button>
             </Grid>

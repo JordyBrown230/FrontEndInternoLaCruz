@@ -20,6 +20,10 @@ const FormContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(5),
 }));
 
+// Expresiones regulares para validaciones
+const nombreRegex = /^[A-Za-zÀ-ÿñÑ\s]+$/;
+const telefonoRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]{7,}$/;
+
 const ServicioBasicoForm: React.FC = () => {
   const [nombre, setNombre] = useState('');
   const [direccion, setDireccion] = useState('');
@@ -27,6 +31,11 @@ const ServicioBasicoForm: React.FC = () => {
   const [telefono, setTelefono] = useState('');
   const [foto, setFoto] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [errors, setErrors] = useState({
+    nombre: '',
+    descripcion: '',
+    telefono: '',
+  });
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -55,20 +64,45 @@ const ServicioBasicoForm: React.FC = () => {
     }
   };
 
+  // Validaciones individuales
+  const handleNombreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNombre(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      nombre: nombreRegex.test(value) ? '' : 'El nombre solo puede contener letras y espacios.',
+    }));
+  };
+
+  const handleDescripcionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDescripcion(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      descripcion: value.trim() !== '' ? '' : 'La descripción es obligatoria.',
+    }));
+  };
+
+  const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTelefono(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      telefono: telefonoRegex.test(value) ? '' : 'El teléfono no es válido.',
+    }));
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setFoto(file);
-    if (file) {
-      setFilePreview(URL.createObjectURL(file));
-    } else {
-      setFilePreview(null);
-    }
+    setFilePreview(file ? URL.createObjectURL(file) : null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nombre || !descripcion || !telefono) {
-      message.error('Por favor, completa todos los campos obligatorios.');
+    // Chequeo final antes de enviar
+    if (Object.values(errors).some((error) => error !== '') || !nombre || !descripcion || !telefono) {
+      message.error('Por favor, corrige los errores en el formulario.');
       return;
     }
 
@@ -96,6 +130,7 @@ const ServicioBasicoForm: React.FC = () => {
     setTelefono('');
     setFoto(null);
     setFilePreview(null);
+    setErrors({ nombre: '', descripcion: '', telefono: '' });
   };
 
   const handleRemoveFoto = () => {
@@ -116,7 +151,9 @@ const ServicioBasicoForm: React.FC = () => {
                 label="Nombre"
                 fullWidth
                 value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
+                onChange={handleNombreChange}
+                error={Boolean(errors.nombre)}
+                helperText={errors.nombre}
                 required
               />
             </Grid>
@@ -133,10 +170,12 @@ const ServicioBasicoForm: React.FC = () => {
                 label="Descripción"
                 fullWidth
                 multiline
-                required
                 rows={4}
                 value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
+                onChange={handleDescripcionChange}
+                error={Boolean(errors.descripcion)}
+                helperText={errors.descripcion}
+                required
               />
             </Grid>
             <Grid item xs={12}>
@@ -144,7 +183,9 @@ const ServicioBasicoForm: React.FC = () => {
                 label="Teléfono"
                 fullWidth
                 value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
+                onChange={handleTelefonoChange}
+                error={Boolean(errors.telefono)}
+                helperText={errors.telefono}
                 required
               />
             </Grid>
@@ -174,7 +215,13 @@ const ServicioBasicoForm: React.FC = () => {
 
             {/* Botón para Enviar el Formulario */}
             <Grid item xs={12}>
-              <Button type="submit" variant="contained" color="primary" fullWidth>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+                disabled={Object.values(errors).some((error) => error !== '') || !nombre || !descripcion || !telefono}
+              >
                 Guardar
               </Button>
             </Grid>

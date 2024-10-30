@@ -1,3 +1,4 @@
+import { StringLiteral } from 'typescript';
 import axiosApi from './api.service';
 
 // Definición de la interfaz para los datos de establecimiento
@@ -26,6 +27,10 @@ export interface Establecimiento {
   propietario: Propietario;
   categoria: Categoria;
   fotosEstablecimiento: Foto[];
+  urlWaze:string;
+  urlGoogleMaps:string;
+  website:string;
+  telefono:string;
 }
 
 export interface EstablecimientoData {
@@ -35,6 +40,10 @@ export interface EstablecimientoData {
   idPropietario: number;
   idCategoria: number;
   idEstablecimiento?: number;
+  urlWaze:string;
+  urlGoogleMaps:string;
+  website:string;
+  telefono:string;
   fotos?: File[];
   existingFotosToKeep?: number[]; // IDs of existing photos to retain when updating
 }
@@ -66,9 +75,13 @@ export const createOrUpdateEstablecimiento = async (
     descripcion: string;
     idPropietario: number;
     idCategoria: number;
-    idEstablecimiento?: number; // Optional for update
-    fotos?: File[]; 
-    existingFotosToKeep?: number[]; // Agregar esta propiedad
+    idEstablecimiento?: number; // Opcional para actualización
+    fotos?: File[];
+    existingFotosToKeep?: number[]; 
+    telefono: string;
+    urlWaze: string;
+    urlGoogleMaps: string;
+    website: string;
   }
 ): Promise<any> => {
   const formData = new FormData();
@@ -78,7 +91,10 @@ export const createOrUpdateEstablecimiento = async (
   formData.append('descripcion', establecimientoData.descripcion);
   formData.append('idPropietario', String(establecimientoData.idPropietario)); 
   formData.append('idCategoria', String(establecimientoData.idCategoria));    
-
+  formData.append('telefono', establecimientoData.telefono);
+  formData.append('urlWaze', establecimientoData.urlWaze);
+  formData.append('urlGoogleMaps', establecimientoData.urlGoogleMaps);
+  formData.append('website', establecimientoData.website);
   if (establecimientoData.idEstablecimiento) {
     formData.append('idEstablecimiento', String(establecimientoData.idEstablecimiento));
   }

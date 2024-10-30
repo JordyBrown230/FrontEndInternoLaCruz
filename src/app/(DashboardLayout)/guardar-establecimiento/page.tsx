@@ -20,7 +20,7 @@ import {
 import { styled } from '@mui/system';
 import { createOrUpdateEstablecimiento, EstablecimientoData, getEstablecimientos } from '@/services/establecimiento.service';
 import { getPropietarios, createPropietario, Propietario } from '@/services/propietario.service';
-import { getCategorias, Categoria, createCategoria } from '@/services/categoria.service';
+import { getCategorias, Categoria, createCategoria, deleteCategoria } from '@/services/categoria.service';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Delete } from '@mui/icons-material';
 import { message } from 'antd';
@@ -28,6 +28,12 @@ import { message } from 'antd';
 const FormContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(5),
 }));
+
+const nameRegex = /^[A-Za-zÀ-ÿñÑ\s]+$/;
+const categoriaRegex = /^[A-Za-zÀ-ÿñÑ\s-]+$/;
+const telefonoRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]{7,}$/;
+const correoRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
 
 const EstablecimientoForm: React.FC = () => {
   const [nombre, setNombre] = useState('');
@@ -46,7 +52,21 @@ const EstablecimientoForm: React.FC = () => {
   const [newPropietarioCorreo, setNewPropietarioCorreo] = useState('');
   const [isCreatingCategoria, setIsCreatingCategoria] = useState(false);
   const [newCategoriaNombre, setNewCategoriaNombre] = useState('');
-
+  const [telefono, setTelefono] = useState('');
+  const [urlWaze, setUrlWaze] = useState('');
+  const [urlGoogleMaps, setUrlGoogleMaps] = useState('');
+  const [website, setWebsite] = useState('');
+  const [errors, setErrors] = useState({
+    nombre: '',
+    direccion: '',
+    telefono: '',
+    correo: '',
+    categoriaNombre: '',
+    urlWaze: '',
+    urlGoogleMaps: '',
+    website: '',
+    telefonoEstablecimiento: ''
+  });
   const searchParams = useSearchParams();
   const router = useRouter();
   const establecimientoId = searchParams.get("id");
@@ -77,9 +97,75 @@ const EstablecimientoForm: React.FC = () => {
     }
   };
 
+  const handleDeleteCategoria = async (id: string) => {
+    try {
+      await deleteCategoria(id);
+      await fetchCategorias();
+      setCategorias((prevCategorias) =>
+        prevCategorias.filter((categoria: any) => categoria.idCategoria !== id)
+      );
+      message.success('Categoría eliminada correctamente.');
+    } catch (error) {
+      message.error('Error al eliminar la categoría.');
+    }
+  };
+
+  const handleFieldChange = (setter: React.Dispatch<React.SetStateAction<string>>, regex: RegExp, key: keyof typeof errors) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setter(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        [key]: regex.test(value) ? '' : 'Campo no válido.',
+      }));
+    };
+
+  const handleNombreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewPropietarioNombre(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      nombre: nameRegex.test(value) ? '' : 'El nombre solo puede contener letras y espacios.',
+    }));
+  };
+
+  const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewPropietarioTelefono(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      telefono: telefonoRegex.test(value) ? '' : 'Teléfono no es válido.',
+    }));
+  };
+
+
+  const handleCorreoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewPropietarioCorreo(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      correo: correoRegex.test(value) ? '' : 'Correo no es válido.',
+    }));
+  };
+
+  const handleCategoriaNombreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewCategoriaNombre(value);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      categoriaNombre: categoriaRegex.test(value) ? '' : 'Categoria no es válida.',
+    }));
+  };
+
+  const HasErrors = () => {
+    return Object.values(errors).some((error) => error !== '');
+  };
+
+
   const handleCreatePropietario = () => {
     setIsCreatingPropietario(true);
   };
+
 
   const handleCancelCreatePropietario = () => {
     setIsCreatingPropietario(false);
@@ -140,6 +226,7 @@ const EstablecimientoForm: React.FC = () => {
       const newCategoria = await createCategoria({ nombre: newCategoriaNombre });
       setCategorias((prev) => [...prev, newCategoria]);
       setIdCategoria(newCategoria.idCategoria.toString());
+
       message.success('Categoría creada correctamente.');
       handleCancelCreateCategoria();
     } catch (error) {
@@ -152,12 +239,16 @@ const EstablecimientoForm: React.FC = () => {
       const response = await getEstablecimientos();
       const establecimiento = response.find((est) => est.idEstablecimiento === parseInt(id));
       if (establecimiento) {
-        const { nombre, direccion, descripcion, propietario, categoria, fotosEstablecimiento } = establecimiento;
+        const { nombre, direccion, descripcion, propietario, categoria, fotosEstablecimiento,telefono,urlWaze,urlGoogleMaps,website } = establecimiento;
         setNombre(nombre || '');
         setDireccion(direccion || '');
         setDescripcion(descripcion || '');
         setIdPropietario(propietario?.idPropietario ? propietario.idPropietario.toString() : '');
         setIdCategoria(categoria?.idCategoria ? categoria.idCategoria.toString() : '');
+        setTelefono(telefono || '');
+        setUrlWaze(urlWaze || '');
+        setUrlGoogleMaps(urlGoogleMaps || '');
+        setWebsite(website || '');
         setExistingFotos(fotosEstablecimiento.map((foto) => ({
           id: foto.idFoto,
           foto: `data:image/jpeg;base64,${Buffer.from(foto.foto).toString('base64')}`,
@@ -176,10 +267,15 @@ const EstablecimientoForm: React.FC = () => {
     }
 
     try {
+      console.log(telefono)
       await createOrUpdateEstablecimiento({
         nombre,
         direccion,
         descripcion,
+        telefono,
+        urlWaze,
+        urlGoogleMaps,
+        website,
         idPropietario: parseInt(idPropietario, 10),
         idCategoria: parseInt(idCategoria, 10),
         idEstablecimiento: establecimientoId ? parseInt(establecimientoId, 10) : undefined,
@@ -198,6 +294,10 @@ const EstablecimientoForm: React.FC = () => {
     setNombre('');
     setDireccion('');
     setDescripcion('');
+    setTelefono('');
+    setUrlWaze('');
+    setUrlGoogleMaps('');
+    setWebsite('');
     setIdPropietario('');
     setIdCategoria('');
     setFotos([]);
@@ -271,33 +371,45 @@ const EstablecimientoForm: React.FC = () => {
 
             {/* Modal para Crear Nuevo Propietario */}
             <Dialog open={isCreatingPropietario} onClose={handleCancelCreatePropietario}>
-              <DialogTitle>Crear Nuevo Propietario</DialogTitle>
+              <DialogTitle>Crear nuevo Propietario</DialogTitle>
               <DialogContent>
                 <TextField
                   label="Nombre"
                   fullWidth
                   value={newPropietarioNombre}
-                  onChange={(e) => setNewPropietarioNombre(e.target.value)}
+                  onChange={handleNombreChange}
+                  error={Boolean(errors.nombre)}
+                  helperText={errors.nombre}
                   required
                 />
                 <TextField
                   label="Teléfono"
                   fullWidth
                   value={newPropietarioTelefono}
-                  onChange={(e) => setNewPropietarioTelefono(e.target.value)}
+                  onChange={handleTelefonoChange}
+                  error={Boolean(errors.telefono)}
+                  helperText={errors.telefono}
                   required
                 />
                 <TextField
                   label="Correo"
                   fullWidth
                   value={newPropietarioCorreo}
-                  onChange={(e) => setNewPropietarioCorreo(e.target.value)}
+                  onChange={handleCorreoChange}
+                  error={Boolean(errors.correo)}
+                  helperText={errors.correo}
                   required
                 />
               </DialogContent>
               <DialogActions>
                 <Button onClick={handleCancelCreatePropietario}>Cancelar</Button>
-                <Button onClick={handleSubmitNewPropietario} color="primary">Guardar</Button>
+                <Button
+                  onClick={handleSubmitNewPropietario}
+                  color="primary"
+                  disabled={HasErrors() || !newPropietarioNombre || !newPropietarioTelefono || !newPropietarioCorreo}  // Disabled if there are errors or fields are empty
+                >
+                  Guardar
+                </Button>
               </DialogActions>
             </Dialog>
 
@@ -318,7 +430,18 @@ const EstablecimientoForm: React.FC = () => {
                   <MenuItem value="create">+ Crear nueva categoría</MenuItem>
                   {categorias.map((categoria) => (
                     <MenuItem key={categoria.idCategoria} value={categoria.idCategoria}>
-                      {categoria.nombre}
+                      <Grid container alignItems="center" justifyContent="space-between">
+                        <Grid item>{categoria.nombre}</Grid>
+                        <Grid item>
+                          <IconButton
+                            onClick={() => handleDeleteCategoria(categoria.idCategoria.toString())}
+                            size="small"
+                            color="error" // Coloca el icono en rojo
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Grid>
+                      </Grid>
                     </MenuItem>
                   ))}
                 </Select>
@@ -327,21 +450,67 @@ const EstablecimientoForm: React.FC = () => {
 
             {/* Modal para Crear Nueva Categoría */}
             <Dialog open={isCreatingCategoria} onClose={handleCancelCreateCategoria}>
-              <DialogTitle>Crear Nueva Categoría</DialogTitle>
+              <DialogTitle>Crear nueva Categoría</DialogTitle>
               <DialogContent>
                 <TextField
                   label="Nombre de la Categoría"
                   fullWidth
                   value={newCategoriaNombre}
-                  onChange={(e) => setNewCategoriaNombre(e.target.value)}
+                  onChange={handleCategoriaNombreChange}
+                  error={Boolean(errors.categoriaNombre)}
+                  helperText={errors.categoriaNombre}
+                  required
                 />
               </DialogContent>
               <DialogActions>
                 <Button onClick={handleCancelCreateCategoria}>Cancelar</Button>
-                <Button onClick={handleSubmitNewCategoria} color="primary">Guardar</Button>
+                <Button
+                  disabled={HasErrors() || !newCategoriaNombre}
+                  onClick={handleSubmitNewCategoria} color="primary">Guardar
+                </Button>
               </DialogActions>
             </Dialog>
 
+            <Grid item xs={12}>
+              <TextField
+                label="Teléfono"
+                fullWidth
+                value={telefono}
+                onChange={handleFieldChange(setTelefono, telefonoRegex, 'telefono')}
+                error={Boolean(errors.telefono)}
+                helperText={errors.telefono}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="URL Waze"
+                fullWidth
+                value={urlWaze}
+                onChange={handleFieldChange(setUrlWaze, urlRegex, 'urlWaze')}
+                error={Boolean(errors.urlWaze)}
+                helperText={errors.urlWaze}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="URL Google Maps"
+                fullWidth
+                value={urlGoogleMaps}
+                onChange={handleFieldChange(setUrlGoogleMaps, urlRegex, 'urlGoogleMaps')}
+                error={Boolean(errors.urlGoogleMaps)}
+                helperText={errors.urlGoogleMaps}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Website"
+                fullWidth
+                value={website}
+                onChange={handleFieldChange(setWebsite, urlRegex, 'website')}
+                error={Boolean(errors.website)}
+                helperText={errors.website}
+              />
+            </Grid>
             {/* File upload */}
             <Grid item xs={12}>
               <Button variant="contained" component="label">
@@ -359,7 +528,6 @@ const EstablecimientoForm: React.FC = () => {
               )}
             </Grid>
 
-            {/* Existing Photos */}
             <Grid item xs={12}>
               {existingFotos.length > 0 && (
                 <Grid container spacing={2} mt={2}>
@@ -380,7 +548,9 @@ const EstablecimientoForm: React.FC = () => {
 
             {/* Botón para Enviar el Formulario */}
             <Grid item xs={12}>
-              <Button type="submit" variant="contained" color="primary" fullWidth disabled={isCreatingPropietario || isCreatingCategoria}>
+              <Button type="submit" variant="contained" color="primary" fullWidth 
+              disabled={HasErrors() || !nombre || !direccion || !idPropietario || !idCategoria||isCreatingPropietario || isCreatingCategoria}
+              >
                 Guardar
               </Button>
             </Grid>
