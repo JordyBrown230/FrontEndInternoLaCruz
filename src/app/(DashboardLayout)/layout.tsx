@@ -67,7 +67,7 @@ export default function RootLayout({ children }: Props) {
       if (!response.ok) {
         throw new Error('Error al cerrar sesión');
       }
-
+      
       Cookies.remove("authToken");
       setIsLoggedIn(false);
       console.log('Sesión cerrada con éxito');

@@ -49,7 +49,7 @@ const validationSchema = Yup.object({
 const TravelGuide = () => {
     const fetchDestinations = async () => {
         try {
-            const response = await fetch('http://localhost:9000/api/destinos/listar', {
+            const response = await fetch('http://localhost:9000/sit/guia-viaje/listar', {
                 method: 'GET',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
@@ -90,12 +90,30 @@ const TravelGuide = () => {
     const handleSave = async (values: Omit<TravelDestination, 'id'>) => {
         let updatedDestinations;
         if (currentDestination) {
-            updatedDestinations = destinations.map(destination =>
-                destination.id === currentDestination.id ? { ...destination, ...values } : destination
-            );
-            toast.success('Destino turístico actualizado con éxito');
+
+            try {
+                const response = await fetch(`http://localhost:9000/sit/guia-viaje/actualizar/${currentDestination.id}`, {
+                    method: 'PUT', // o 'PATCH' si prefieres
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(values),
+                });
+    
+                if (!response.ok) throw new Error('Error al actualizar el destino turístico');
+    
+                const updatedDestination = await response.json();
+                updatedDestinations = destinations.map(destination =>
+                    destination.id === currentDestination.id ? updatedDestination.data : destination
+                );
+                toast.success('Destino turístico actualizado con éxito');
+            } catch (error) {
+                console.error('Error actualizando el destino:', error);
+                toast.error('Error al actualizar el destino turístico');
+                return; // Salir si hay un error
+            }
+
         } else {
-            const response = await fetch('http://localhost:9000/api/destinos/agregar', {
+            const response = await fetch('http://localhost:9000/sit/guia-viaje/agregar', {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
@@ -105,12 +123,35 @@ const TravelGuide = () => {
             updatedDestinations = [...destinations, { id: Date.now(), ...values }] as TravelDestination[];
             toast.success('Destino turístico agregado con éxito');
         }
+        fetchDestinations();
         setDestinations(updatedDestinations);
         setFilteredDestinations(updatedDestinations);
         handleCloseDialog();
     };
 
-    const handleDeleteConfirmation = (destination: TravelDestination) => {
+    const handleDeleteConfirmation = async (destination: TravelDestination) => {
+        if (currentDestination) {
+            try {
+                const response = await fetch(`http://localhost:9000/sit/guia-viaje/eliminar/${currentDestination.id}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                });
+    
+                if (!response.ok) throw new Error('Error al eliminar el destino turístico');
+    
+                // Actualizar la lista de destinos después de la eliminación
+                fetchDestinations();
+                const updatedDestinations = destinations.filter(destination => destination.id !== currentDestination.id);
+                setDestinations(updatedDestinations);
+                setFilteredDestinations(updatedDestinations);
+                toast.success('Destino turístico eliminado con éxito');
+            } catch (error) {
+                console.error('Error eliminando el destino:', error);
+                toast.error('Error al eliminar el destino turístico');
+            } finally {
+                handleCloseDialog(); // Cerrar el diálogo después de la operación
+            }
+        }
         setCurrentDestination(destination);
         setOpenDeleteDialog(true);
     };
@@ -176,6 +217,18 @@ const TravelGuide = () => {
                                                 startIcon={<DirectionsIcon />}
                                             >
                                                 Ver en Google Maps
+                                            </Button>
+                                            <Button
+                                                component={Link}
+                                                href={`https://www.google.com/maps?q=${destination.latitude},${destination.longitude}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                variant="outlined"
+                                                color="secondary"
+                                                startIcon={<DirectionsIcon />}
+                                                sx={{ ml: 2 }}
+                                            >
+                                                Ver en Waze
                                             </Button>
                                         </Box>
                                         <Box mt={2}>

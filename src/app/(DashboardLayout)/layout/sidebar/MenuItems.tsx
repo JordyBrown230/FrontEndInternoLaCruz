@@ -72,7 +72,7 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
-    title: "Sitios Arqueológicos",
+    title: "Destino Turístico",
     icon: IconPlane,
     href: "/crud-guiaViaje",
   },

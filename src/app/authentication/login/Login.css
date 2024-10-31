@@ -1,6 +1,6 @@
 /* login2.module.css */
     .container {
-	background: linear-gradient(to bottom, rgba(0, 0, 0, 0.290) 0%, rgba(0, 0, 0, 0.390) 50%, rgba(0, 0, 0, 0.290) 100%), url('../img/dji_fly_20231004_113204_109_1696802874708_photo_optimized.jpg');
+	background: linear-gradient(to bottom, rgba(0, 0, 0, 0.427) 0%, rgba(0, 0, 0, 0.427) 50%, rgba(0, 0, 0, 0.427) 100%), url('../img/dji_fly_20231004_113204_109_1696802874708_photo_optimized.jpg');
 	background-repeat: no-repeat;
 	background-size: cover;
 	background-position: center center;
@@ -11,6 +11,11 @@
 	flex-direction: column;
   }
   
+
+  .bodyBackground{
+	background-color: #f9f9f9;
+  }
+
   .input {
 	width: 100%;
 	padding: 12px 20px;

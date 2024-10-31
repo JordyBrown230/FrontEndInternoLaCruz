@@ -39,11 +39,11 @@ const Municipalidad = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            }); 
+            });
             if (!response.ok) {
-                throw new Error('Network response was not ok'); 
+                throw new Error('Network response was not ok');
             }
-            const data = await response.json(); 
+            const data = await response.json();
             console.log(data)
             setRiskZones(data.data);
             setFilteredRiskZones(data.data);
@@ -100,11 +100,31 @@ const Municipalidad = () => {
     const handleSave = async (values: Omit<RiskZone, 'id'>) => {
         let updatedZones;
         if (currentZone) {
-            // Actualizar zona existente
-            updatedZones = riskZones.map(zone =>
-                zone.id === currentZone.id ? { ...zone, ...values } : zone
-            );
-            toast.success('Zona de riesgo actualizada con éxito');
+            try {
+                const response = await fetch(`http://localhost:9000/sit/zona-riesgo/actualizar/${currentZone.id}`, {
+                    method: 'PUT', // o 'PATCH' si prefieres
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(values),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al actualizar la zona de riesgo');
+                }
+
+                const updatedData = await response.json();
+                updatedZones = riskZones.map(zone =>
+                    zone.id === currentZone.id ? updatedData.data : zone
+                );
+                toast.success('Zona de riesgo actualizada con éxito');
+            } catch (error) {
+                console.error('Error actualizando la zona de riesgo:', error);
+                toast.error('Hubo un problema al actualizar la zona de riesgo');
+                return; // Salir si hay un error
+            }
+
         } else {
             // Agregar nueva zona
             const response = await fetch('http://localhost:9000/sit/zona-riesgo/agregar', {
@@ -123,6 +143,7 @@ const Municipalidad = () => {
             updatedZones = [...riskZones, { id: Date.now(), ...values }] as RiskZone[];
             toast.success('Zona de riesgo agregada con éxito');
         }
+        fetchRiskZones()
         setRiskZones(updatedZones);
         setFilteredRiskZones(updatedZones);
         handleCloseDialog();
@@ -200,54 +221,56 @@ const Municipalidad = () => {
                     />
 
                     <Grid container spacing={4} justifyContent="center">
-                        {filteredRiskZones.map((zone) => (
-                            <Grid item xs={12} md={6} key={zone.id} data-aos="fade-up">
-                                <Card>
-                                    <CardContent>
-                                        <Typography gutterBottom variant="h5" component="div">
-                                            {zone.title}
-                                        </Typography>
-                                        <Box
-                                            component="div"
-                                            dangerouslySetInnerHTML={{ __html: zone.description }}
-                                            sx={{ whiteSpace: 'pre-wrap' }}
-                                        />
-                                        <Box mt={2}>
-                                            <Button
-                                                component={Link}
-                                                href={`https://www.google.com/maps?q=${zone.latitude},${zone.longitude}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                variant="outlined"
-                                                color="primary"
-                                                startIcon={<DirectionsIcon />}
-                                            >
-                                                Ver en Google Maps
-                                            </Button>
-                                            <Button
-                                                component={Link}
-                                                href={`https://www.waze.com/ul?ll=${zone.latitude},${zone.longitude}&navigate=yes`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                variant="outlined"
-                                                color="secondary"
-                                                startIcon={<DirectionsIcon />}
-                                                sx={{ ml: 2 }}
-                                            >
-                                                Ver en Waze
-                                            </Button>
-                                        </Box>
-                                        <Box mt={2}>
-                                            <IconButton onClick={() => handleClickOpen(zone)} aria-label="edit">
-                                                <EditIcon />
-                                            </IconButton>
-                                            <IconButton onClick={() => handleDeleteConfirmation(zone)} aria-label="delete">
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </Box>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
+                        {filteredRiskZones?.map((zone) => (
+                            zone && (
+                                <Grid item xs={12} md={6} key={zone.id} data-aos="fade-up">
+                                    <Card>
+                                        <CardContent>
+                                            <Typography gutterBottom variant="h5" component="div">
+                                                {zone.title}
+                                            </Typography>
+                                            <Box
+                                                component="div"
+                                                dangerouslySetInnerHTML={{ __html: zone.description }}
+                                                sx={{ whiteSpace: 'pre-wrap' }}
+                                            />
+                                            <Box mt={2}>
+                                                <Button
+                                                    component={Link}
+                                                    href={`https://www.google.com/maps?q=${zone.latitude},${zone.longitude}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    variant="outlined"
+                                                    color="primary"
+                                                    startIcon={<DirectionsIcon />}
+                                                >
+                                                    Ver en Google Maps
+                                                </Button>
+                                                <Button
+                                                    component={Link}
+                                                    href={`https://www.waze.com/ul?ll=${zone.latitude},${zone.longitude}&navigate=yes`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    variant="outlined"
+                                                    color="secondary"
+                                                    startIcon={<DirectionsIcon />}
+                                                    sx={{ ml: 2 }}
+                                                >
+                                                    Ver en Waze
+                                                </Button>
+                                            </Box>
+                                            <Box mt={2}>
+                                                <IconButton onClick={() => handleClickOpen(zone)} aria-label="edit">
+                                                    <EditIcon />
+                                                </IconButton>
+                                                <IconButton onClick={() => handleDeleteConfirmation(zone)} aria-label="delete">
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            )
                         ))}
                     </Grid>
                 </Box>

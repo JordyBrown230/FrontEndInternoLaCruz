@@ -85,10 +85,33 @@ const Municipalidad = () => {
     const handleSave = async (values: Omit<LegalInfo, 'id'>) => {
         let updatedInfos;
         if (currentInfo) {
-            updatedInfos = legalInfos.map(info =>
-                info.id === currentInfo.id ? { ...info, ...values } : info
-            );
-            toast.success('Información actualizada con éxito');
+            
+            try {
+                // Actualizar información existente
+                const response = await fetch(`http://localhost:9000/sit/info-legal-regulatoria/actualizar/${currentInfo.id}`, {
+                    method: 'PUT', // o 'PATCH' si prefieres
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(values),
+                });
+    
+                if (!response.ok) {
+                    throw new Error('Error al actualizar la información');
+                }
+    
+                const updatedData = await response.json();
+                updatedInfos = legalInfos.map(info =>
+                    info.id === currentInfo.id ? updatedData.data : info
+                );
+                toast.success('Información actualizada con éxito');
+            } catch (error) {
+                console.error('Error actualizando la información:', error);
+                toast.error('Hubo un problema al actualizar la información');
+                return; // Salir si hay un error
+            }
+
         } else {
             const response = await fetch('http://localhost:9000/sit/info-legal-regulatoria/agregar', {
                 method: 'POST',

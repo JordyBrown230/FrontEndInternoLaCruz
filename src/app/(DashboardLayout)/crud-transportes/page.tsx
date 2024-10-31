@@ -4,6 +4,7 @@ import { Typography, Grid, Card, CardContent, Box, Button, TextField, Dialog, Di
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, DirectionsBus as BusIcon, CarRental as CarIcon, DirectionsBike as BikeIcon, LocationOn as LocationIcon, Launch as LaunchIcon, Search as SearchIcon, LocationOn } from '@mui/icons-material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
+import Carousel from 'react-material-ui-carousel';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { Formik, Form, Field } from 'formik';
@@ -48,13 +49,14 @@ const Municipalidad = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            }); 
+            });
             //console.log(await response.json())
             if (!response.ok) {
-                throw new Error('Network response was not ok'); 
+                throw new Error('Network response was not ok');
             }
-            const data = await response.json(); 
+            const data = await response.json();
             //setData(data);
+            console.log(data)
             setTransportInfos(data.data)
             setFilteredTransportInfos(data.data)
         } catch (error) {
@@ -141,23 +143,25 @@ const Municipalidad = () => {
                         const errorData = await imageUploadResponse.json();
                         throw new Error(`Error al subir imágenes: ${errorData.message || 'Error desconocido'}`);
                     }
+                    // Actualizar lista de transportes con el nuevo transporte
+                    console.log('hlaa')
+                    fetchAttractions()
+                    updatedInfos = [...transportInfos, { id: newTransport.data.transport_id, ...values, images: [] }] as TransportInfo[];
+                    toast.success('Información agregada con éxito'); // Notificación de éxito
+
+                    // Actualización del estado
+                    setTransportInfos(updatedInfos);
+                    setFilteredTransportInfos(updatedInfos);
+                    handleCloseDialog();
                 }
 
-                // Actualizar lista de transportes con el nuevo transporte
-                fetchAttractions()
-                updatedInfos = [...transportInfos, { id: newTransport.data.transport_id, ...values, images: [] }] as TransportInfo[];
-                toast.success('Información agregada con éxito'); // Notificación de éxito
+
             } catch (error) {
                 toast.error('Error al agregar la información de transporte');
                 console.error('Error:', error);
                 return;
             }
         }
-
-        // Actualización del estado
-        setTransportInfos(updatedInfos);
-        setFilteredTransportInfos(updatedInfos);
-        handleCloseDialog();
     };
 
 
@@ -220,7 +224,7 @@ const Municipalidad = () => {
                         </Button>
                     </Box>
 
-                    {/* Campo de búsqueda */}
+                  
                     <TextField
                         label="Buscar por tipo de transporte"
                         variant="outlined"
@@ -241,6 +245,34 @@ const Municipalidad = () => {
                             <Grid item xs={12} md={6} key={info.transport_id} data-aos="fade-up">
                                 <Card>
                                     <CardContent>
+                                        {/* Carrusel de Imágenes */}
+                                        {info.Images && info.Images.length > 0 && (
+                                            <Carousel
+                                                showThumbs={false}
+                                                showStatus={false}
+                                                infiniteLoop
+                                                autoPlay
+                                                interval={3000}
+                                                transitionTime={500}
+                                            >
+                                                {info.Images.map((Image, index) => (
+                                                    Image.url ? (
+                                                        <img
+                                                            key={index}
+                                                            src={Image.url}
+                                                            alt={`Imagen ${index + 1}`}
+                                                            style={{
+                                                                width: '100%',
+                                                                height: '300px', // Ajusta la altura
+                                                                objectFit: 'cover',
+                                                            }}
+                                                        />
+                                                    ) : null
+                                                ))}
+                                            </Carousel>
+                                        )}
+
+                                        {/* Información textual */}
                                         <Typography gutterBottom variant="h5" component="div">
                                             {info.title}
                                         </Typography>
@@ -257,20 +289,6 @@ const Municipalidad = () => {
                                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                                                 Teléfono: {info.phone}
                                             </Typography>
-                                        )}
-                                        {info.Images.length > 0 && (
-                                            <Box mt={2}>
-                                                {info.Images.map((Image, index) => (
-                                                    Image.url ? ( // Verifica que Image.url esté definido
-                                                        <img
-                                                            key={index}
-                                                            src={Image.url}
-                                                            alt={`Imagen ${index + 1}`}
-                                                            style={{ width: '100%', height: 'auto', borderRadius: '4px', marginBottom: '8px' }}
-                                                        />
-                                                    ) : null
-                                                ))}
-                                            </Box>
                                         )}
                                         {info.website && (
                                             <Box mt={2}>
@@ -301,8 +319,7 @@ const Municipalidad = () => {
                     </Grid>
                 </Box>
             </DashboardCard>
-
-            {/* Dialog para agregar/editar información */}
+    
             <Dialog open={openDialog} onClose={handleCloseDialog}>
                 <DialogTitle>{currentInfo ? 'Editar Información' : 'Agregar Nueva Información'}</DialogTitle>
                 <Formik
@@ -445,7 +462,7 @@ const Municipalidad = () => {
                 </Formik>
             </Dialog>
 
-            {/* Dialog para confirmar eliminación */}
+           
             <Dialog open={openDeleteDialog} onClose={handleCloseDialog}>
                 <DialogTitle>¿Eliminar Información?</DialogTitle>
                 <DialogActions>

@@ -95,10 +95,31 @@ const EducationTourism = () => {
     const handleSave = async (values: Omit<EducationalResource, 'id'>) => {
         let updatedResources;
         if (currentResource) {
-            updatedResources = educationalResources.map(resource =>
-                resource.id === currentResource.id ? { ...resource, ...values } : resource
-            );
-            toast.success('Recurso actualizado con éxito');
+            try {
+                // Actualizar recurso existente
+                const response = await fetch(`http://localhost:9000/sit/educacion-turistica/actualizar/${currentResource.id}`, {
+                    method: 'PUT', // o 'PATCH' si prefieres
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(values),
+                });
+    
+                if (!response.ok) {
+                    throw new Error('Error al actualizar el recurso');
+                }
+    
+                const updatedData = await response.json();
+                updatedResources = educationalResources.map(resource =>
+                    resource.id === currentResource.id ? updatedData.data : resource
+                );
+                toast.success('Recurso actualizado con éxito');
+            } catch (error) {
+                console.error('Error actualizando el recurso:', error);
+                toast.error('Hubo un problema al actualizar el recurso');
+                return; // Salir si hay un error
+            }
         } else {
             const response = await fetch('http://localhost:9000/sit/educacion-turistica/agregar', {
                 method: 'POST',
