@@ -60,7 +60,7 @@ const ServicioBasicoForm: React.FC = () => {
         setFilePreview(foto ? `data:image/jpeg;base64,${Buffer.from(foto).toString('base64')}` : null);
       }
     } catch (error) {
-      message.error('Error al cargar el servicio básico.');
+      console.log('Error al cargar el servicio básico.');
     }
   };
 
