@@ -34,7 +34,7 @@ const Sidebar = ({
           variant="permanent"
           PaperProps={{
             sx: {
-              width: "300.5px",  // Ajusta el valor según tus necesidades
+              width: "320.5px",  // Ajusta el valor según tus necesidades
               boxSizing: "border-box",
               backgroundColor: "#ededed", // Color de fondo para desktop
               borderTopRightRadius: "20px",  // Redondear solo la esquina superior derecha

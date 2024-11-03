@@ -10,10 +10,8 @@ interface Login2Props {
 
 function Login2({ setIsLoggedIn }: Login2Props) {
   return (
-    <html lang="en">
-      <body className="container">
       <PageContainer title="SIT" description="this is Login page">
-      <Box>
+      <Box className="container">
         <Grid container spacing={0} justifyContent="center" sx={{ height: "100vh" }}>
           <Grid
             item
@@ -45,8 +43,6 @@ function Login2({ setIsLoggedIn }: Login2Props) {
         </Grid>
       </Box>
     </PageContainer>
-      </body>
-    </html>
   );
 }
 
