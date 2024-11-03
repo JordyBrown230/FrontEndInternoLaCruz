@@ -119,7 +119,7 @@ const EventosToursList: React.FC = () => {
             <Grid container spacing={4} justifyContent="center">
               {filteredEventosTours.map((evento) => (
                 <Grid item xs={12} md={6} lg={4} key={evento.idEventoTour} data-aos="fade-up">
-                  <Card sx={{ maxHeight: 410, display: 'flex', flexDirection: 'column' }}>
+                  <Card sx={{ maxHeight: 420, display: 'flex', flexDirection: 'column' }}>
                     <Carousel>
                       {evento.fotosEventoTour && evento.fotosEventoTour.length > 0 ? (
                         evento.fotosEventoTour.map((foto, index) => (

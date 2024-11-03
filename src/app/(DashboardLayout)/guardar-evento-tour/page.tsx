@@ -108,7 +108,7 @@ const EventoTourForm: React.FC = () => {
       const data = await getEventosTours();
       const eventoTour = data.find(evt => evt.idEventoTour === parseInt(id));
       if (eventoTour) {
-        const { tipo, nombre, descripcion, fechaInicio, fechaFin, horaInicio, horaFin, ubicacion, precio, capacidadMaxima, tipoActividad, organizador, requerimientosEspeciales, duracionEstimada, puntoEncuentro, fotosEventoTour,urlWaze, urlGoogleMaps, website } = eventoTour;
+        const { tipo, nombre, descripcion, fechaInicio, fechaFin, horaInicio, horaFin, ubicacion, precio, capacidadMaxima, tipoActividad, organizador, requerimientosEspeciales, duracionEstimada, puntoEncuentro, fotosEventoTour, urlWaze, urlGoogleMaps, website } = eventoTour;
         setTipo(tipo || '');
         setNombre(nombre || '');
         setDescripcion(descripcion || '');
@@ -124,9 +124,9 @@ const EventoTourForm: React.FC = () => {
         setRequerimientosEspeciales(requerimientosEspeciales || '');
         setDuracionEstimada(duracionEstimada || '');
         setPuntoEncuentro(puntoEncuentro || '');
-        setUrlGoogleMaps(urlGoogleMaps||'');
-        setUrlWaze(urlWaze||'');
-        setWebsite(website||'');
+        setUrlGoogleMaps(urlGoogleMaps || '');
+        setUrlWaze(urlWaze || '');
+        setWebsite(website || '');
         setExistingFotos(fotosEventoTour.map(foto => ({
           id: foto.idFoto,
           foto: `data:image/jpeg;base64,${Buffer.from(foto.foto).toString('base64')}`,
@@ -284,6 +284,7 @@ const EventoTourForm: React.FC = () => {
                 label="Hora Inicio"
                 type="time"
                 fullWidth
+                required
                 value={horaInicio}
                 onChange={handleFieldChange(setHoraInicio, timeRegex, 'horaInicio')}
                 error={Boolean(errors.horaInicio)}
@@ -478,7 +479,16 @@ const EventoTourForm: React.FC = () => {
               )}
             </FormContainer>
             <Grid item xs={12}>
-              <Button type="submit" variant="contained" color="primary" fullWidth>
+              <Button type="submit" variant="contained" color="primary" fullWidth
+                disabled={
+                  Object.values(errors).some((error) => error !== '') ||
+                  !nombre ||
+                  !descripcion ||
+                  !ubicacion ||
+                  !tipo ||
+                  !horaInicio ||
+                  !fechaInicio
+                }>
                 Guardar
               </Button>
             </Grid>
