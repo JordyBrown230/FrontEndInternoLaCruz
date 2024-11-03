@@ -25,6 +25,7 @@ export interface ServicioSeguridadData {
   website?: string;
   idServicioSeguridad?: number; // Opcional para actualizar
   foto?: File; // La foto es un archivo opcional
+  eliminarFoto?: boolean; // Bandera opcional para eliminar la imagen
 }
 
 export const getServiciosSeguridad = async (): Promise<ServicioSeguridad[]> => {
@@ -68,8 +69,15 @@ export const createOrUpdateServicioSeguridad = async (
     formData.append('foto', servicioData.foto); // Manejo de foto
   }
 
+  // Añade la bandera eliminarFoto si es true
+  if (servicioData.eliminarFoto) {
+    formData.append('eliminarFoto', 'true');
+  }
+
   try {
-    const response = await axiosApi.post('/servicios-seguridad', formData);
+    const response = servicioData.idServicioSeguridad
+      ? await axiosApi.put(`/servicios-seguridad/${servicioData.idServicioSeguridad}`, formData)
+      : await axiosApi.post('/servicios-seguridad', formData);
     return response.data;
   } catch (error) {
     console.error('Error creating/updating servicio seguridad:', error);

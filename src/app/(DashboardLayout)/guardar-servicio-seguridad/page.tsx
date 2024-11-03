@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   TextField,
   Button,
@@ -13,7 +13,7 @@ import {
 import { styled } from '@mui/system';
 import { createOrUpdateServicioSeguridad, ServicioSeguridadData, getServiciosSeguridad } from '@/services/serviciosseguridad.service';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Delete } from '@mui/icons-material';
+import { CameraAlt, Delete } from '@mui/icons-material';
 import { message } from 'antd';
 
 const FormContainer = styled(Container)(({ theme }) => ({
@@ -34,8 +34,10 @@ const ServicioSeguridadForm: React.FC = () => {
   const [urlWaze, setUrlWaze] = useState('');
   const [urlGoogleMaps, setUrlGoogleMaps] = useState('');
   const [website, setWebsite] = useState('');
-  const [foto, setFoto] = useState<File | null>(null);
+  const [foto, setFoto] = useState<File | undefined>(undefined); // Cambiado a File | undefined
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState<boolean | undefined>(undefined); // Cambiado a boolean | undefined
+  const fileInputRef = useRef<HTMLInputElement | null>(null); // Ref para el input de archivo
   const [errors, setErrors] = useState({
     nombre: '',
     descripcion: '',
@@ -131,9 +133,13 @@ const ServicioSeguridadForm: React.FC = () => {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setFoto(file);
+    const file = e.target.files?.[0];
+    setFoto(file); // Ahora permite File | undefined
     setFilePreview(file ? URL.createObjectURL(file) : null);
+    setRemoveImage(false); // Reinicia la eliminación de imagen cuando se adjunta una nueva
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -144,7 +150,7 @@ const ServicioSeguridadForm: React.FC = () => {
     }
 
     try {
-      await createOrUpdateServicioSeguridad({
+      const servicioData: ServicioSeguridadData = {
         nombre,
         direccion,
         descripcion,
@@ -155,7 +161,10 @@ const ServicioSeguridadForm: React.FC = () => {
         website,
         idServicioSeguridad: servicioId ? parseInt(servicioId, 10) : undefined,
         foto,
-      } as ServicioSeguridadData);
+        eliminarFoto: servicioId && removeImage ? true : undefined, // Ajuste para eliminarFoto
+      };
+
+      await createOrUpdateServicioSeguridad(servicioData);
       message.success('Servicio de seguridad guardado correctamente.');
       resetForm();
       router.push('/servicios-seguridad');
@@ -173,14 +182,16 @@ const ServicioSeguridadForm: React.FC = () => {
     setUrlWaze('');
     setUrlGoogleMaps('');
     setWebsite('');
-    setFoto(null);
+    setFoto(undefined); // Cambiado a undefined
     setFilePreview(null);
     setErrors({ nombre: '', descripcion: '', telefono: '', urlWaze: '', urlGoogleMaps: '', website: '' });
+    setRemoveImage(undefined); // Reinicia la eliminación de imagen
   };
 
   const handleRemoveFoto = () => {
-    setFoto(null);
+    setFoto(undefined); // Cambiado a undefined
     setFilePreview(null);
+    setRemoveImage(true); // Marca la imagen para eliminación
   };
 
   return (
@@ -274,8 +285,10 @@ const ServicioSeguridadForm: React.FC = () => {
             </Grid>
             <Grid item xs={12}>
               <Button variant="contained" component="label">
-                Subir Foto
-                <input type="file" hidden onChange={handleFileChange} />
+              <CameraAlt sx={{ mr: 1 }} /> 
+                Adjutar foto
+                <input type="file" accept="image/*"
+                  hidden onChange={handleFileChange} ref={fileInputRef} />
               </Button>
               {filePreview && (
                 <Grid container spacing={2} mt={2}>
@@ -286,7 +299,7 @@ const ServicioSeguridadForm: React.FC = () => {
                         onClick={handleRemoveFoto}
                         style={{ position: 'absolute', top: 0, right: 0 }}
                       >
-                        <Delete />
+                        <Delete color="error" />
                       </IconButton>
                     </Box>
                   </Grid>

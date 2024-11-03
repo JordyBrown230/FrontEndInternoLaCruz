@@ -77,7 +77,8 @@ export const createOrUpdateEstablecimiento = async (
     idCategoria: number;
     idEstablecimiento?: number; // Opcional para actualización
     fotos?: File[];
-    existingFotosToKeep?: number[]; 
+    existingFotosToKeep?: number[];
+    fotosParaEliminar?: number[]; // Nueva lista para fotos a eliminar
     telefono: string;
     urlWaze: string;
     urlGoogleMaps: string;
@@ -86,6 +87,7 @@ export const createOrUpdateEstablecimiento = async (
 ): Promise<any> => {
   const formData = new FormData();
 
+  // Agrega los campos estándar
   formData.append('nombre', establecimientoData.nombre);
   formData.append('direccion', establecimientoData.direccion);
   formData.append('descripcion', establecimientoData.descripcion);
@@ -95,13 +97,30 @@ export const createOrUpdateEstablecimiento = async (
   formData.append('urlWaze', establecimientoData.urlWaze);
   formData.append('urlGoogleMaps', establecimientoData.urlGoogleMaps);
   formData.append('website', establecimientoData.website);
+
+  // Para actualización, incluye el ID del establecimiento
   if (establecimientoData.idEstablecimiento) {
     formData.append('idEstablecimiento', String(establecimientoData.idEstablecimiento));
   }
 
+  // Agrega las nuevas fotos
   if (establecimientoData.fotos) {
-    Array.from(establecimientoData.fotos).forEach((file) => {
+    establecimientoData.fotos.forEach((file) => {
       formData.append('fotos', file);
+    });
+  }
+
+  // Agrega fotos para mantener
+  if (establecimientoData.existingFotosToKeep) {
+    establecimientoData.existingFotosToKeep.forEach((id) => {
+      formData.append('existingFotosToKeep[]', String(id));
+    });
+  }
+
+  // Agrega fotos para eliminar
+  if (establecimientoData.fotosParaEliminar) {
+    establecimientoData.fotosParaEliminar.forEach((id) => {
+      formData.append('fotosParaEliminar[]', String(id));
     });
   }
 
@@ -109,7 +128,8 @@ export const createOrUpdateEstablecimiento = async (
     const response = await axiosApi.post('/establecimientos', formData);
     return response.data;
   } catch (error) {
-    console.error('Error creating/updating establecimiento:', error);
+    console.error('Error creando o actualizando el establecimiento:', error);
     throw error;
   }
 };
+

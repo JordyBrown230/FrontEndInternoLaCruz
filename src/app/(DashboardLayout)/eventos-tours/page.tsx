@@ -11,13 +11,13 @@ import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCa
 import Aos from 'aos';
 import 'aos/dist/aos.css';
 import Link from 'next/link';
-import { Establecimiento, getEstablecimientos, deleteEstablecimiento } from '@/services/establecimiento.service';
+import { EventoTour, getEventosTours, deleteEventoTour } from '@/services/eventotour.service';
 
-const EstablecimientosList: React.FC = () => {
-  const [establecimientos, setEstablecimientos] = useState<Establecimiento[]>([]);
-  const [filteredEstablecimientos, setFilteredEstablecimientos] = useState<Establecimiento[]>([]);
+const EventosToursList: React.FC = () => {
+  const [eventosTours, setEventosTours] = useState<EventoTour[]>([]);
+  const [filteredEventosTours, setFilteredEventosTours] = useState<EventoTour[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [establecimientoToDelete, setEstablecimientoToDelete] = useState<number | null>(null);
+  const [eventoTourToDelete, setEventoTourToDelete] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
     open: false,
@@ -27,56 +27,56 @@ const EstablecimientosList: React.FC = () => {
 
   useEffect(() => {
     Aos.init({ duration: 1000 });
-    fetchEstablecimientos();
+    fetchEventosTours();
   }, []);
 
-  const fetchEstablecimientos = async () => {
+  const fetchEventosTours = async () => {
     try {
-      const data = await getEstablecimientos();
+      const data = await getEventosTours();
       if (data && data.length > 0) {
-        setEstablecimientos(data);
-        setFilteredEstablecimientos(data);
-        showSnackbar('Establecimientos cargados exitosamente.', 'success');
+        setEventosTours(data);
+        setFilteredEventosTours(data);
+        showSnackbar('Eventos y tours cargados exitosamente.', 'success');
       } else {
-        setEstablecimientos([]);
-        setFilteredEstablecimientos([]);
-        showSnackbar('No hay establecimientos disponibles.', 'info');
+        setEventosTours([]);
+        setFilteredEventosTours([]);
+        showSnackbar('No hay eventos o tours disponibles.', 'info');
       }
     } catch (error) {
-      showSnackbar('Error al cargar los establecimientos.', 'error');
+      showSnackbar('Error al cargar los eventos y tours.', 'error');
     }
   };
 
   const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value.toLowerCase();
     setSearchQuery(query);
-    setFilteredEstablecimientos(
-      establecimientos.filter(est =>
-        est.nombre.toLowerCase().includes(query) ||
-        est.direccion.toLowerCase().includes(query) ||
-        est.descripcion.toLowerCase().includes(query)
+    setFilteredEventosTours(
+      eventosTours.filter(evento =>
+        evento.nombre.toLowerCase().includes(query) ||
+        evento.ubicacion.toLowerCase().includes(query) ||
+        (evento.descripcion && evento.descripcion.toLowerCase().includes(query))
       )
     );
   };
 
   const handleDelete = async () => {
-    if (establecimientoToDelete !== null) {
+    if (eventoTourToDelete !== null) {
       try {
-        await deleteEstablecimiento(establecimientoToDelete);
-        const updatedEstablecimientos = establecimientos.filter(est => est.idEstablecimiento !== establecimientoToDelete);
-        setEstablecimientos(updatedEstablecimientos);
-        setFilteredEstablecimientos(updatedEstablecimientos);
-        showSnackbar('Establecimiento eliminado con éxito.', 'success');
+        await deleteEventoTour(eventoTourToDelete);
+        const updatedEventosTours = eventosTours.filter(evento => evento.idEventoTour !== eventoTourToDelete);
+        setEventosTours(updatedEventosTours);
+        setFilteredEventosTours(updatedEventosTours);
+        showSnackbar('Evento o tour eliminado con éxito.', 'success');
       } catch (error) {
-        showSnackbar('Error al eliminar el establecimiento.', 'error');
+        showSnackbar('Error al eliminar el evento o tour.', 'error');
       }
       setDeleteDialogOpen(false);
-      setEstablecimientoToDelete(null);
+      setEventoTourToDelete(null);
     }
   };
 
   const openDeleteDialog = (id: number) => {
-    setEstablecimientoToDelete(id);
+    setEventoTourToDelete(id);
     setDeleteDialogOpen(true);
   };
 
@@ -89,19 +89,19 @@ const EstablecimientosList: React.FC = () => {
   };
 
   return (
-    <PageContainer title="Establecimientos" description="Gestión de establecimientos">
+    <PageContainer title="Eventos y Tours" description="Gestión de eventos y tours">
       <DashboardCard>
         <>
-        <Box textAlign="center" mb={4}>
-            <Typography variant="h2" gutterBottom data-aos="fade-down">Gestión de Establecimientos</Typography>
+          <Box textAlign="center" mb={4}>
+            <Typography variant="h2" gutterBottom data-aos="fade-down">Gestión de Eventos y Tours</Typography>
             <Typography variant="h6" color="text.secondary" data-aos="fade-down">
-              Administra los establecimientos de tu localidad.
+              Administra tus eventos y tours
             </Typography>
-            <Link href='/guardar-establecimiento' passHref>
-              <Button variant="contained" color="primary" sx={{ mt: 2 }}>+ Agregar Establecimiento</Button>
+            <Link href='/guardar-evento-tour' passHref>
+              <Button variant="contained" color="primary" sx={{ mt: 2 }}>+ Agregar Evento/Tour</Button>
             </Link>
           </Box>
-          
+
           <TextField
             label="Buscar"
             variant="outlined"
@@ -115,18 +115,18 @@ const EstablecimientosList: React.FC = () => {
             }}
           />
 
-          {filteredEstablecimientos.length > 0 ? (
+          {filteredEventosTours.length > 0 ? (
             <Grid container spacing={4} justifyContent="center">
-              {filteredEstablecimientos.map((establecimiento) => (
-                <Grid item xs={12} md={6} lg={4} key={establecimiento.idEstablecimiento} data-aos="fade-up">
+              {filteredEventosTours.map((evento) => (
+                <Grid item xs={12} md={6} lg={4} key={evento.idEventoTour} data-aos="fade-up">
                   <Card sx={{ maxHeight: 410, display: 'flex', flexDirection: 'column' }}>
                     <Carousel>
-                      {establecimiento.fotosEstablecimiento && establecimiento.fotosEstablecimiento.length > 0 ? (
-                        establecimiento.fotosEstablecimiento.map((foto, index) => (
+                      {evento.fotosEventoTour && evento.fotosEventoTour.length > 0 ? (
+                        evento.fotosEventoTour.map((foto, index) => (
                           <img
                             key={index}
                             src={`data:image/jpeg;base64,${Buffer.from(foto.foto).toString('base64')}`}
-                            alt="Establecimiento"
+                            alt="Evento o Tour"
                             height="200"
                             width="100%"
                             style={{ objectFit: 'cover' }}
@@ -139,20 +139,20 @@ const EstablecimientosList: React.FC = () => {
                       )}
                     </Carousel>
                     <CardContent>
-                      <Typography gutterBottom variant="h5">{establecimiento.nombre}</Typography>
+                      <Typography gutterBottom variant="h5">{evento.nombre}</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {establecimiento.descripcion}
+                        {evento.descripcion}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" mt={1}>
-                        Dirección: {establecimiento.direccion}
+                        Ubicación: {evento.ubicacion}
                       </Typography>
                       <Box mt={2}>
-                        <Link href={`/guardar-establecimiento?id=${establecimiento.idEstablecimiento}`} passHref>
+                        <Link href={`/guardar-evento-tour?id=${evento.idEventoTour}`} passHref>
                           <IconButton color="primary">
                             <EditIcon />
                           </IconButton>
                         </Link>
-                        <IconButton color="error" onClick={() => openDeleteDialog(establecimiento.idEstablecimiento)}>
+                        <IconButton color="error" onClick={() => openDeleteDialog(evento.idEventoTour)}>
                           <DeleteIcon />
                         </IconButton>
                       </Box>
@@ -163,14 +163,14 @@ const EstablecimientosList: React.FC = () => {
             </Grid>
           ) : (
             <Typography variant="body1" color="text.secondary" textAlign="center" mt={4}>
-              No hay establecimientos disponibles.
+              No hay eventos o tours disponibles.
             </Typography>
           )}
 
           <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
             <DialogTitle>¿Estás seguro?</DialogTitle>
             <DialogContent>
-              <Typography>¿Deseas eliminar este establecimiento? Esta acción no se puede deshacer.</Typography>
+              <Typography>¿Deseas eliminar este evento o tour? Esta acción no se puede deshacer.</Typography>
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setDeleteDialogOpen(false)} color="primary">Cancelar</Button>
@@ -207,4 +207,4 @@ const EstablecimientosList: React.FC = () => {
   );
 };
 
-export default EstablecimientosList;
+export default EventosToursList;

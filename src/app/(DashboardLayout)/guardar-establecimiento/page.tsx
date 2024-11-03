@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   TextField,
   Button,
@@ -22,7 +22,7 @@ import { createOrUpdateEstablecimiento, EstablecimientoData, getEstablecimientos
 import { getPropietarios, createPropietario, Propietario } from '@/services/propietario.service';
 import { getCategorias, Categoria, createCategoria, deleteCategoria } from '@/services/categoria.service';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Delete } from '@mui/icons-material';
+import { CameraAlt, Delete } from '@mui/icons-material';
 import { message } from 'antd';
 
 const FormContainer = styled(Container)(({ theme }) => ({
@@ -56,6 +56,8 @@ const EstablecimientoForm: React.FC = () => {
   const [urlWaze, setUrlWaze] = useState('');
   const [urlGoogleMaps, setUrlGoogleMaps] = useState('');
   const [website, setWebsite] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [fotosParaEliminar, setFotosParaEliminar] = useState<number[]>([]);
   const [errors, setErrors] = useState({
     nombre: '',
     direccion: '',
@@ -107,6 +109,15 @@ const EstablecimientoForm: React.FC = () => {
       message.success('Categoría eliminada correctamente.');
     } catch (error) {
       message.error('Error al eliminar la categoría.');
+    }
+  };
+
+  const handleRemoveNewFoto = (index: number) => {
+    setFotos((prevFotos) => prevFotos.filter((_, i) => i !== index));
+    setFilePreview((prevPreviews) => prevPreviews.filter((_, i) => i !== index));
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -185,14 +196,25 @@ const EstablecimientoForm: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFiles = e.target.files ? Array.from(e.target.files) : [];
-    const allFiles = [...fotos, ...newFiles].slice(0, 5);
-    setFotos(allFiles);
-    const newPreviews = allFiles.map((file) => URL.createObjectURL(file));
-    setFilePreview(newPreviews);
+
+    // Calcula el total de fotos nuevas y existentes
+    const totalFiles = [...existingFotos, ...fotos, ...newFiles];
+    if (totalFiles.length > 5) {
+      message.error("Solo puedes subir hasta 5 fotos en total.");
+      return;
+    }
+
+    setFotos((prevFotos) => [...prevFotos, ...newFiles]);
+    setFilePreview((prevPreviews) => [...prevPreviews, ...newFiles.map((file) => URL.createObjectURL(file))]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleRemoveExistingFoto = (id: number) => {
     setExistingFotos((prev) => prev.filter((foto) => foto.id !== id));
+    setFotosParaEliminar((prev) => [...prev, id]); // Agrega el ID de la foto a eliminar
   };
 
   const handleSubmitNewPropietario = async () => {
@@ -239,7 +261,7 @@ const EstablecimientoForm: React.FC = () => {
       const response = await getEstablecimientos();
       const establecimiento = response.find((est) => est.idEstablecimiento === parseInt(id));
       if (establecimiento) {
-        const { nombre, direccion, descripcion, propietario, categoria, fotosEstablecimiento,telefono,urlWaze,urlGoogleMaps,website } = establecimiento;
+        const { nombre, direccion, descripcion, propietario, categoria, fotosEstablecimiento, telefono, urlWaze, urlGoogleMaps, website } = establecimiento;
         setNombre(nombre || '');
         setDireccion(direccion || '');
         setDescripcion(descripcion || '');
@@ -281,6 +303,7 @@ const EstablecimientoForm: React.FC = () => {
         idEstablecimiento: establecimientoId ? parseInt(establecimientoId, 10) : undefined,
         fotos,
         existingFotosToKeep: existingFotos.map(f => f.id),
+        fotosParaEliminar,
       } as EstablecimientoData);
       message.success('Establecimiento guardado correctamente.');
       resetForm();
@@ -512,44 +535,71 @@ const EstablecimientoForm: React.FC = () => {
               />
             </Grid>
             {/* File upload */}
-            <Grid item xs={12}>
-              <Button variant="contained" component="label">
-                Subir Fotos ({fotos ? fotos.length : 0} archivos seleccionados)
-                <input type="file" hidden multiple onChange={handleFileChange} />
-              </Button>
-              {filePreview.length > 0 && (
-                <Grid container spacing={2} mt={2}>
-                  {filePreview.map((src, index) => (
-                    <Grid item xs={4} key={index}>
-                      <img src={src} alt={`preview-${index}`} style={{ width: '100%' }} />
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            </Grid>
+            <FormContainer maxWidth="sm">
+              <Grid item xs={12}>
+                <Button variant="contained" component="label">
+                  <CameraAlt sx={{ mr: 1 }} />
+                  Adjuntar fotos
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileChange}
+                    ref={fileInputRef} // Asocia el ref al input
+                  />
+                </Button>
 
-            <Grid item xs={12}>
+                {filePreview.length > 0 && (
+                  <Grid container spacing={2} mt={2}>
+                    {filePreview.map((src, index) => (
+                      <Grid item xs={4} key={index} style={{ position: 'relative' }}>
+                        <img
+                          src={src}
+                          alt={`preview-${index}`}
+                          style={{ width: '100%' }} // Sin sombra ni borde
+                        />
+                        <IconButton
+                          onClick={() => handleRemoveNewFoto(index)}
+                          style={{ position: 'absolute', top: 0, right: 0 }}
+                          color="secondary"
+                          size="small"
+                        >
+                          <Delete color="error" />
+                        </IconButton>
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </Grid>
+
               {existingFotos.length > 0 && (
                 <Grid container spacing={2} mt={2}>
                   {existingFotos.map((foto) => (
                     <Grid item xs={4} key={foto.id} style={{ position: 'relative' }}>
-                      <img src={foto.foto} alt={`existing-${foto.id}`} style={{ width: '100%' }} />
-                      <IconButton
+                      <img
+                        src={foto.foto}
+                        alt={`existing-${foto.id}`}
+                        style={{ width: '100%' }} // Sin sombra ni borde
+                      />
+                      <Button
                         onClick={() => handleRemoveExistingFoto(foto.id)}
                         style={{ position: 'absolute', top: 0, right: 0 }}
+                        color="secondary"
+                        size="small"
                       >
-                        <Delete />
-                      </IconButton>
+                        <Delete color="error" />
+                      </Button>
                     </Grid>
                   ))}
                 </Grid>
               )}
-            </Grid>
+            </FormContainer>
 
             {/* Botón para Enviar el Formulario */}
             <Grid item xs={12}>
-              <Button type="submit" variant="contained" color="primary" fullWidth 
-              disabled={HasErrors() || !nombre || !direccion || !idPropietario || !idCategoria||isCreatingPropietario || isCreatingCategoria}
+              <Button type="submit" variant="contained" color="primary" fullWidth
+                disabled={HasErrors() || !nombre || !direccion || !idPropietario || !idCategoria || isCreatingPropietario || isCreatingCategoria}
               >
                 Guardar
               </Button>

@@ -120,12 +120,12 @@ const ServiciosBasicosList: React.FC = () => {
             <Grid container spacing={4} justifyContent="center">
               {filteredServiciosBasicos.map((servicio) => (
                 <Grid item xs={12} md={6} lg={4} key={servicio.idServicioBasico} data-aos="fade-up">
-                  <Card sx={{ maxHeight: 400, display: 'flex', flexDirection: 'column' }}>
-                    <Carousel>
+                  <Card sx={{ maxHeight: 410, display: 'flex', flexDirection: 'column' }}>
+                    <Carousel  navButtonsAlwaysInvisible={true}>
                       {servicio.foto && (
                         <img
-                          src={`data:image/jpeg;base64,${Buffer.from(servicio.foto).toString('base64')}`}
-                          alt="Servicio Básico"
+                        src={`data:image/jpeg;base64,${Buffer.from(servicio.foto).toString('base64')}`}
+                        alt="Servicio Básico"
                           height="300"
                           width="100%"
                         />
@@ -140,8 +140,8 @@ const ServiciosBasicosList: React.FC = () => {
                         Teléfono: {servicio.telefono}
                       </Typography>
                       <Box mt={2}>
-                        <Link href={`/guardar-servicio-basico?id=${servicio.idServicioBasico}`} passHref>
-                          <IconButton color="primary">
+                      <Link href={`/guardar-servicio-basico?id=${servicio.idServicioBasico}`} passHref>
+                      <IconButton color="primary">
                             <EditIcon />
                           </IconButton>
                         </Link>
@@ -199,5 +199,4 @@ const ServiciosBasicosList: React.FC = () => {
     </PageContainer>
   );
 };
-
 export default ServiciosBasicosList;

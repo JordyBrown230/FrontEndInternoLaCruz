@@ -121,8 +121,8 @@ const ServiciosSeguridadList: React.FC = () => {
             <Grid container spacing={4} justifyContent="center">
               {filteredServiciosSeguridad.map((servicio) => (
                 <Grid item xs={12} md={6} lg={4} key={servicio.idServicioSeguridad} data-aos="fade-up">
-                  <Card sx={{ maxHeight: 400, display: 'flex', flexDirection: 'column' }}>
-                    <Carousel>
+                  <Card sx={{ maxHeight: 410, display: 'flex', flexDirection: 'column' }}>
+                    <Carousel  navButtonsAlwaysInvisible={true}>
                       {servicio.foto && (
                         <img
                           src={`data:image/jpeg;base64,${Buffer.from(servicio.foto).toString('base64')}`}
