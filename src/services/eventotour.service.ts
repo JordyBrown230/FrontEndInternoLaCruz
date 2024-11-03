@@ -21,6 +21,9 @@ export interface EventoTour {
   organizador?: string;
   requerimientosEspeciales?: string;
   duracionEstimada?: string;
+  urlWaze?: string;
+  urlGoogleMaps?: string;
+  website?: string;
   puntoEncuentro?: string;
   fotosEventoTour: FotoEventoTour[];
 }
@@ -46,6 +49,9 @@ export interface EventoTourData {
   fotos?: File[];
   existingFotosToKeep?: number[];
   fotosParaEliminar?: number[];
+  urlWaze?: string;
+  urlGoogleMaps?: string;
+  website?: string;
 }
 
 // Servicio para obtener todos los eventos y tours
@@ -92,7 +98,10 @@ export const createOrUpdateEventoTour = async (
   if (eventoTourData.duracionEstimada) formData.append('duracionEstimada', eventoTourData.duracionEstimada);
   if (eventoTourData.puntoEncuentro) formData.append('puntoEncuentro', eventoTourData.puntoEncuentro);
   if (eventoTourData.idEventoTour) formData.append('idEventoTour', String(eventoTourData.idEventoTour));
-
+  if (eventoTourData.urlWaze) formData.append('urlWaze', eventoTourData.urlWaze);
+  if (eventoTourData.urlGoogleMaps) formData.append('urlGoogleMaps', eventoTourData.urlGoogleMaps);
+  if (eventoTourData.website) formData.append('website', eventoTourData.website);
+  
   if (eventoTourData.fotos) {
     Array.from(eventoTourData.fotos).forEach((file) => {
       formData.append('fotos', file);

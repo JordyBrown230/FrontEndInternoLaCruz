@@ -51,7 +51,9 @@ const EventoTourForm: React.FC = () => {
   const [filePreview, setFilePreview] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fotosParaEliminar, setFotosParaEliminar] = useState<number[]>([]);
-
+  const [urlWaze, setUrlWaze] = useState('');
+  const [urlGoogleMaps, setUrlGoogleMaps] = useState('');
+  const [website, setWebsite] = useState('');
   const [existingFotos, setExistingFotos] = useState<{ id: number; foto: string }[]>([]);
   const [errors, setErrors] = useState({
     tipo: '',
@@ -69,6 +71,9 @@ const EventoTourForm: React.FC = () => {
     requerimientosEspeciales: '',
     duracionEstimada: '',
     puntoEncuentro: '',
+    urlWaze: '',
+    urlGoogleMaps: '',
+    website: ''
   });
 
 
@@ -103,7 +108,7 @@ const EventoTourForm: React.FC = () => {
       const data = await getEventosTours();
       const eventoTour = data.find(evt => evt.idEventoTour === parseInt(id));
       if (eventoTour) {
-        const { tipo, nombre, descripcion, fechaInicio, fechaFin, horaInicio, horaFin, ubicacion, precio, capacidadMaxima, tipoActividad, organizador, requerimientosEspeciales, duracionEstimada, puntoEncuentro, fotosEventoTour } = eventoTour;
+        const { tipo, nombre, descripcion, fechaInicio, fechaFin, horaInicio, horaFin, ubicacion, precio, capacidadMaxima, tipoActividad, organizador, requerimientosEspeciales, duracionEstimada, puntoEncuentro, fotosEventoTour,urlWaze, urlGoogleMaps, website } = eventoTour;
         setTipo(tipo || '');
         setNombre(nombre || '');
         setDescripcion(descripcion || '');
@@ -119,6 +124,9 @@ const EventoTourForm: React.FC = () => {
         setRequerimientosEspeciales(requerimientosEspeciales || '');
         setDuracionEstimada(duracionEstimada || '');
         setPuntoEncuentro(puntoEncuentro || '');
+        setUrlGoogleMaps(urlGoogleMaps||'');
+        setUrlWaze(urlWaze||'');
+        setWebsite(website||'');
         setExistingFotos(fotosEventoTour.map(foto => ({
           id: foto.idFoto,
           foto: `data:image/jpeg;base64,${Buffer.from(foto.foto).toString('base64')}`,
@@ -186,6 +194,9 @@ const EventoTourForm: React.FC = () => {
         requerimientosEspeciales,
         duracionEstimada,
         puntoEncuentro,
+        urlWaze,
+        urlGoogleMaps,
+        website,
         idEventoTour: eventoTourId ? parseInt(eventoTourId, 10) : undefined,
         fotos,
         existingFotosToKeep: existingFotos.map(f => f.id),
@@ -373,6 +384,38 @@ const EventoTourForm: React.FC = () => {
                 helperText={errors.puntoEncuentro}
               />
             </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                label="URL Waze"
+                fullWidth
+                value={urlWaze}
+                onChange={handleFieldChange(setUrlWaze, urlRegex, 'urlWaze')}
+                error={Boolean(errors.urlWaze)}
+                helperText={errors.urlWaze}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="URL Google Maps"
+                fullWidth
+                value={urlGoogleMaps}
+                onChange={handleFieldChange(setUrlGoogleMaps, urlRegex, 'urlGoogleMaps')}
+                error={Boolean(errors.urlGoogleMaps)}
+                helperText={errors.urlGoogleMaps}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Website"
+                fullWidth
+                value={website}
+                onChange={handleFieldChange(setWebsite, urlRegex, 'website')}
+                error={Boolean(errors.website)}
+                helperText={errors.website}
+              />
+            </Grid>
+
             {/* File upload */}
             <FormContainer maxWidth="sm">
               <Grid item xs={12}>
