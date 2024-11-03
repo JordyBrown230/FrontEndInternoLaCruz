@@ -7,6 +7,9 @@ import {
   IconVideo,
   IconForms,
   IconAccessible,
+  IconDroplet,
+  IconShieldCheck,
+  IconCalendarEvent
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -24,9 +27,27 @@ const Menuitems = [
   },
   {
     id: uniqueId(),
-    title: "Empresas",
-    icon: IconBuilding,
-    href: "/crud-empresas",
+    title: "Establecimientos",
+    icon: IconBuilding, 
+    href: "/establecimientos",
+  },
+  {
+    id: uniqueId(),
+    title: "Servicios Basicos",
+    icon: IconDroplet, 
+    href: "/servicios-basicos",
+  },
+  {
+    id: uniqueId(),
+    title: "Servicios Seguridad",
+    icon: IconShieldCheck, 
+    href: "/servicios-seguridad",
+  },
+  {
+    id: uniqueId(),
+    title: "Eventos y Tours",
+    icon: IconCalendarEvent,
+    href: "/eventos-tours",
   },
   {
     id: uniqueId(),
