@@ -112,8 +112,8 @@ const EventoTourForm: React.FC = () => {
         setTipo(tipo || '');
         setNombre(nombre || '');
         setDescripcion(descripcion || '');
-        setFechaInicio(fechaInicio || '');
-        setFechaFin(fechaFin || '');
+        setFechaInicio(fechaInicio ? new Date(fechaInicio).toISOString().substring(0, 10) : '');
+        setFechaFin(fechaFin ? new Date(fechaFin).toISOString().substring(0, 10) : '');
         setHoraInicio(horaInicio || '');
         setHoraFin(horaFin || '');
         setUbicacion(ubicacion || '');
