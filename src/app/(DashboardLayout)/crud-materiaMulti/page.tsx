@@ -25,14 +25,14 @@ const Municipalidad: React.FC = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            }); 
+            });
             //console.log(await response.json())
             if (!response.ok) {
                 throw new Error('Network response was not ok'); // Manejo de errores de red
             }
-            const data = await response.json(); 
-           setFiles(data.data)
-           // setFilter(data)
+            const data = await response.json();
+            setFiles(data.data)
+            // setFilter(data)
         } catch (error) {
             console.error('Error fetching attractions:', error);
         } finally {
@@ -92,15 +92,15 @@ const Municipalidad: React.FC = () => {
                     body: formData,
                     credentials: 'include',
                 });
-        
+
                 if (!response.ok) {
                     throw new Error('Error al agregar el archivo');
                 }
-        
+
                 const data = await response.json();
                 console.log(data.data)
                 fetchMulti();
-                setFiles(data.data); 
+                setFiles(data.data);
                 toast.success('Archivo agregado exitosamente!');
 
             } catch (error) {
@@ -138,7 +138,7 @@ const Municipalidad: React.FC = () => {
                 method: 'DELETE',
                 credentials: 'include',
             });
-    
+
             if (!response.ok) {
                 throw new Error('Error al eliminar el archivo');
             }
@@ -161,7 +161,7 @@ const Municipalidad: React.FC = () => {
     };
 
     const handleEdit = () => {
-        if (currentFileIndex !== null) {         
+        if (currentFileIndex !== null) {
             const updatedFiles = [...files];
             updatedFiles[currentFileIndex] = {
                 ...updatedFiles[currentFileIndex],
@@ -186,163 +186,179 @@ const Municipalidad: React.FC = () => {
     });
 
     return (
-       
-        <PageContainer title="Multimedia" description=""> 
-        <DashboardCard title="">
-            {/* Título de la vista */}
-            <Typography variant="h4" gutterBottom align="center">
-                Gestión de Archivos Multimedia
-            </Typography>
 
-            {/* Filtros para mostrar solo imágenes, videos o ambos */}
-            <Box textAlign="center" mt={2}>
-                <FormControl fullWidth variant="outlined">
-                    <InputLabel>Filtro</InputLabel>
-                    <Select
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value as 'all' | 'images' | 'videos')}
-                        label="Filtro"
-                    >
-                        <MenuItem value="all">Todos</MenuItem>
-                        <MenuItem value="images">Imágenes</MenuItem>
-                        <MenuItem value="videos">Videos</MenuItem>
-                    </Select>
-                </FormControl>
-            </Box>
+        <PageContainer title="Multimedia" description="">
+            <DashboardCard>
+                {/* Título de la vista */}
+                <Typography variant="h4" gutterBottom align="center">
+                    Gestión de Archivos Multimedia
+                </Typography>
 
-            {/* Botón para agregar archivos */}
-            <Box textAlign="center" mt={2}>
-                <input
-                    type="file"
-                    id="file-input"
-                    style={{ display: 'none' }}
-                    onChange={handleFileChange}
-                />
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => document.getElementById('file-input')?.click()}
-                >
-                    Agregar Archivos
-                </Button>
-            </Box>
+                {/* Filtros para mostrar solo imágenes, videos o ambos */}
+                <Box textAlign="center" mt={2}>
+                    <FormControl fullWidth variant="outlined">
+                        <InputLabel>Filtro</InputLabel>
+                        <Select
+                            value={filter}
+                            onChange={(e) => setFilter(e.target.value as 'all' | 'images' | 'videos')}
+                            label="Filtro"
+                        >
+                            <MenuItem value="all">Todos</MenuItem>
+                            <MenuItem value="images">Imágenes</MenuItem>
+                            <MenuItem value="videos">Videos</MenuItem>
+                        </Select>
+                    </FormControl>
+                </Box>
 
-            {/* Lista de archivos */}
-            <Grid container spacing={2} mt={2}>
-                {filteredFiles.map((file) => (
-                    <Grid item xs={12} sm={6} md={4} key={file.id}>
-                        <Card>
-                            {file.type.startsWith('image/') ? (
-                                <CardMedia
-                                    component="img"
-                                    alt={file.name}
-                                    height="140"
-                                    image={file.url}
-                                    title={file.name}
-                                />
-                            ) : (
-                                <CardMedia
-                                    component="video"
-                                    height="140"
-                                    controls
-                                    src={file.url}
-                                    title={file.name}
-                                />
-                            )}
-                            <CardContent>
-                                <Typography variant="h6">{file.title || file.name}</Typography>
-                                <Typography variant="body2">{file.description}</Typography>
-                                <Button variant="contained" color="primary" onClick={() => downloadFile(file)}>
-                                    Descargar
-                                </Button>
-                                <Button variant="contained" color="secondary" onClick={() => openEditDialog(file.id)} sx={{ ml: 1 }}>
-                                    Editar
-                                </Button>
-                                <Button variant="contained" color="error" onClick={() => {
-                                    setCurrentFileIndex(file.id);
-                                    setOpenConfirmDialog(true);
-                                }} sx={{ ml: 1 }}>
-                                    Eliminar
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
-
-            {/* Dialogo para agregar/editar archivo */}
-            <Dialog open={openDialog} onClose={resetForm}>
-                <DialogTitle>{currentFileIndex !== null ? 'Editar Archivo' : 'Agregar Archivo'}</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Título"
-                        type="text"
-                        fullWidth
-                        variant="outlined"
-                        value={newTitle}
-                        onChange={(e) => setNewTitle(e.target.value)}
+                {/* Botón para agregar archivos */}
+                <Box textAlign="center" mt={2}>
+                    <input
+                        type="file"
+                        id="file-input"
+                        style={{ display: 'none' }}
+                        onChange={handleFileChange}
                     />
-                    <TextField
-                        margin="dense"
-                        label="Nombre del Archivo"
-                        type="text"
-                        fullWidth
-                        variant="outlined"
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Descripción"
-                        type="text"
-                        fullWidth
-                        variant="outlined"
-                        multiline
-                        rows={2}
-                        value={newDescription}
-                        onChange={(e) => setNewDescription(e.target.value)}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={resetForm} color="primary">
-                        Cancelar
-                    </Button>
-                    <Button onClick={currentFileIndex !== null ? handleEdit : handleAddFile} color="primary">
-                        {currentFileIndex !== null ? 'Guardar' : 'Agregar'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Dialogo de confirmación para eliminar archivo */}
-            <Dialog
-                open={openConfirmDialog}
-                onClose={() => setOpenConfirmDialog(false)}
-            >
-                <DialogTitle>Confirmar Eliminación</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        ¿Estás seguro de que deseas eliminar este archivo? Esta acción no se puede deshacer.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenConfirmDialog(false)} color="primary">
-                        Cancelar
-                    </Button>
                     <Button
-                        onClick={() => {
-                            if (currentFileIndex !== null) deleteFile(currentFileIndex);
-                        }}
-                        color="error"
+                        variant="contained"
+                        color="primary"
+                        onClick={() => document.getElementById('file-input')?.click()}
                     >
-                        Eliminar
+                        Agregar Archivos
                     </Button>
-                </DialogActions>
-            </Dialog>
+                </Box>
 
-            {/* Toaster para mostrar notificaciones */}
-            <Toaster />
+                {/* Lista de archivos */}
+                <Grid container spacing={2} mt={2}>
+                    {filteredFiles.map((file) => (
+                        <Grid item xs={12} sm={6} md={4} key={file.id}>
+                            <Card>
+                                {file.type.startsWith('image/') ? (
+                                    <CardMedia
+                                        component="img"
+                                        alt={file.name}
+                                        height="140"
+                                        image={file.url}
+                                        title={file.name}
+                                    />
+                                ) : (
+                                    <CardMedia
+                                        component="video"
+                                        height="140"
+                                        controls
+                                        src={file.url}
+                                        title={file.name}
+                                    />
+                                )}
+                                <CardContent>
+                                    <Typography variant="subtitle1" color="textSecondary">{file.title || file.name}</Typography>
+                                    <Typography variant="body2" color="textSecondary">{file.description}</Typography>
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        onClick={() => downloadFile(file)}
+                                        sx={{ mt: 1, mr: 1 }}
+                                    >
+                                        Descargar
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        color="secondary"
+                                        onClick={() => openEditDialog(file.id)}
+                                        sx={{ mt: 1, mr: 1 }}
+                                    >
+                                        Editar
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        onClick={() => {
+                                            setCurrentFileIndex(file.id);
+                                            setOpenConfirmDialog(true);
+                                        }}
+                                        sx={{ mt: 1 }}
+                                    >
+                                        Eliminar
+                                    </Button>
+                                </CardContent>
+
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+
+                {/* Dialogo para agregar/editar archivo */}
+                <Dialog open={openDialog} onClose={resetForm}>
+                    <DialogTitle>{currentFileIndex !== null ? 'Editar Archivo' : 'Agregar Archivo'}</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            label="Título"
+                            type="text"
+                            fullWidth
+                            variant="outlined"
+                            value={newTitle}
+                            onChange={(e) => setNewTitle(e.target.value)}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Nombre del Archivo"
+                            type="text"
+                            fullWidth
+                            variant="outlined"
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Descripción"
+                            type="text"
+                            fullWidth
+                            variant="outlined"
+                            multiline
+                            rows={2}
+                            value={newDescription}
+                            onChange={(e) => setNewDescription(e.target.value)}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={resetForm} color="primary">
+                            Cancelar
+                        </Button>
+                        <Button onClick={currentFileIndex !== null ? handleEdit : handleAddFile} color="primary">
+                            {currentFileIndex !== null ? 'Guardar' : 'Agregar'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Dialogo de confirmación para eliminar archivo */}
+                <Dialog
+                    open={openConfirmDialog}
+                    onClose={() => setOpenConfirmDialog(false)}
+                >
+                    <DialogTitle>Confirmar Eliminación</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            ¿Estás seguro de que deseas eliminar este archivo? Esta acción no se puede deshacer.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenConfirmDialog(false)} color="primary">
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                if (currentFileIndex !== null) deleteFile(currentFileIndex);
+                            }}
+                            color="error"
+                        >
+                            Eliminar
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Toaster para mostrar notificaciones */}
+                <Toaster />
             </DashboardCard>
         </PageContainer>
     );

@@ -32,13 +32,7 @@ const Dashboard = () => {
             <Grid container spacing={3}>
               <Grid item xs={12}>
               <SalesOverview />
-              </Grid>
-              <Grid item xs={12}>
-              <ProductPerformance />
-              </Grid>
-              <Grid item xs={12}>
-              <RecentTransactions />
-              </Grid>
+              </Grid>  
             </Grid>
           </Grid>      
         </Grid>
