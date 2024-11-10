@@ -262,14 +262,6 @@ const Municipalidad: React.FC = () => {
                                     </Button>
                                     <Button
                                         variant="outlined"
-                                        color="secondary"
-                                        onClick={() => openEditDialog(file.id)}
-                                        sx={{ mt: 1, mr: 1 }}
-                                    >
-                                        Editar
-                                    </Button>
-                                    <Button
-                                        variant="outlined"
                                         color="error"
                                         onClick={() => {
                                             setCurrentFileIndex(file.id);
