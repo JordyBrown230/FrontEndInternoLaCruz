@@ -46,7 +46,7 @@ const AuthLogin = ({ title, subtitle, subtext, setIsLoggedIn }: loginType) => {
   };
 
   const handleForgotPassword = () => {
-    window.location.href = 'authEmail';
+    window.location.href = 'authentication/authEmail';
   };
 
   return (

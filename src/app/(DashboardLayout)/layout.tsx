@@ -77,9 +77,25 @@ export default function RootLayout({ children }: Props) {
   };
 
   if (!isLoggedIn) {
-    return <Login2 setIsLoggedIn={setIsLoggedIn} />;
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          width: '100%', // Usar el 100% del ancho de la ventana
+          height: '100%', // Asegurar que ocupe todo el alto de la ventana
+          overflow: 'hidden', // Evitar el desplazamiento
+          margin: 0, // Eliminar márgenes por defecto
+          padding: 0, // Eliminar rellenos por defecto
+        }}
+      >
+        <Login2 setIsLoggedIn={setIsLoggedIn} />
+      </Box>
+    );
   }
-
+  
   return (
     <MainWrapper>
       {/* Sidebar (Menú lateral) */}
