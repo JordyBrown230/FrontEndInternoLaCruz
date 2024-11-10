@@ -58,29 +58,7 @@ const Municipalidad = () => {
         AOS.init(); fetchRiskZones();
     }, []);
     const [loading, setLoading] = useState(true);
-    const [riskZones, setRiskZones] = useState<RiskZone[]>([
-        {
-            id: 1,
-            title: "Zona de Inundación",
-            description: "Área propensa a inundaciones durante la temporada de lluvias.",
-            latitude: 11.083754,
-            longitude: -85.618924,
-        },
-        {
-            id: 2,
-            title: "Zona de Deslizamiento",
-            description: "Área con riesgo de deslizamientos durante fuertes lluvias.",
-            latitude: 11.071509,
-            longitude: -85.638865,
-        },
-        {
-            id: 3,
-            title: "Zona Sísmica",
-            description: "Área con alta actividad sísmica.",
-            latitude: 11.052131,
-            longitude: -85.667673,
-        },
-    ]);
+    const [riskZones, setRiskZones] = useState<RiskZone[]>([ ]);
     const [filteredRiskZones, setFilteredRiskZones] = useState<RiskZone[]>(riskZones);
     const [openDialog, setOpenDialog] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
