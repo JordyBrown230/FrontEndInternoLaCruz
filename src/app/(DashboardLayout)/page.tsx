@@ -13,8 +13,8 @@ const Dashboard = () => {
   return (
     <PageContainer title="Dashboard" description="this is Dashboard">
       <Box textAlign="center" mb={4}>
-                        <Typography variant="h2" gutterBottom data-aos="fade-down">Bienvenidos a Atracciones Turísticas SIT</Typography>
-                        <Typography variant="h6" color="text.secondary" data-aos="fade-down">Administra las atracciones turísticas del cantón.</Typography>
+                        <Typography variant="h2" gutterBottom data-aos="fade-down">Bienvenidos al Sistema de Información Turística (SIT)</Typography>
+                        <Typography variant="h6" color="text.secondary" data-aos="fade-down">Administra los datos del cantón de La Cruz.</Typography>
                     </Box>
       <Box>
         <Grid container spacing={3}>

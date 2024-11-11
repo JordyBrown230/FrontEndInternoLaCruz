@@ -124,14 +124,24 @@ const Municipalidad: React.FC = () => {
     };
 
     const downloadFile = (file: FileType) => {
-        const link = document.createElement('a');
-        link.href = file.url;
-        link.download = file.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        fetch(file.url)
+            .then(response => response.blob())
+            .then(blob => {
+                const downloadUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = file.name;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(downloadUrl); // Libera el objeto URL después de su uso
+            })
+            .catch(error => {
+                console.error('Error al descargar el archivo:', error);
+                toast.error('No se pudo descargar el archivo');
+            });
     };
-
+    
     const deleteFile = async (index: number) => {
         try {
             const response = await fetch(`http://localhost:9000/sit/multimedia/eliminar/${index}`, {
