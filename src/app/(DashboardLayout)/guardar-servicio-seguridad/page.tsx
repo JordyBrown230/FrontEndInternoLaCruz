@@ -22,7 +22,7 @@ const FormContainer = styled(Container)(({ theme }) => ({
 
 // Expresiones regulares para validaciones
 const nombreRegex = /^[A-Za-zÀ-ÿñÑ\s]+$/;
-const telefonoRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]{7,}$/;
+const telefonoRegex = "";
 const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
 
 const ServicioSeguridadForm: React.FC = () => {
@@ -101,7 +101,6 @@ const ServicioSeguridadForm: React.FC = () => {
     setTelefono(value);
     setErrors((prevErrors) => ({
       ...prevErrors,
-      telefono: telefonoRegex.test(value) ? '' : 'El teléfono no es válido.',
     }));
   };
 

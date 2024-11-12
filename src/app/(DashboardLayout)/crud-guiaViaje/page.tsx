@@ -200,11 +200,14 @@ const TravelGuide = () => {
                                             dangerouslySetInnerHTML={{ __html: destination.description }}
                                             sx={{ whiteSpace: 'pre-wrap' }}
                                         />
-                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                                        <Typography variant="h5" gutterBottom data-aos="fade-down">Consejos de viaje</Typography>
+                                        <Box
+                                            component="div"
+                                            dangerouslySetInnerHTML={{ __html: destination.travelTips }}
+                                            sx={{ whiteSpace: 'pre-wrap', color: 'text.secondary', mt: 1 }}
+                                        />
+                                         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                                             <strong>Mejor época para visitar:</strong> {destination.bestTimeToVisit}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                                            <strong>Consejos de viaje:</strong> {destination.travelTips}
                                         </Typography>
                                         <Box mt={2}>
                                             <Button

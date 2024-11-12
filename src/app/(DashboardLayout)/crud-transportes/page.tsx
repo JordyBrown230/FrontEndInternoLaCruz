@@ -166,34 +166,38 @@ const Municipalidad = () => {
 
 
     const handleDelete = async () => {
-        if (currentInfo) {
-            try {
-                const response = await fetch('http://localhost:9000/sit/transporte/eliminar/' + currentInfo.transport_id, {
-                    method: 'DELETE',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                // Verifica si la respuesta fue exitosa
-                if (!response.ok) {
-                    throw new Error('Error al eliminar la información');
-                }
-
-                // Filtra el estado local para eliminar el elemento
-                const updatedInfos = transportInfos.filter(info => info.transport_id !== currentInfo.transport_id);
-                setTransportInfos(updatedInfos);
-                setFilteredTransportInfos(updatedInfos);
-                toast.error('Información eliminada con éxito'); // Notificación de eliminación
-            } catch (error) {
-                console.error('Error al eliminar la información:', error);
-                toast.error('Hubo un problema al eliminar la información'); // Manejo del error
-            }
-
+        if (!currentInfo) {
+            toast.error('No se ha seleccionado ninguna información para eliminar');
+            return;
         }
-        handleCloseDialog();
+    
+        try {
+            const response = await fetch(`http://localhost:9000/sit/transporte/eliminar/${currentInfo.transport_id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Error al eliminar la información: ${response.statusText}`);
+            }
+    
+            // Filtrar para eliminar el elemento localmente si la respuesta fue exitosa
+            const updatedInfos = transportInfos.filter(info => info.transport_id !== currentInfo.transport_id);
+            setTransportInfos(updatedInfos);
+            setFilteredTransportInfos(updatedInfos);
+    
+            toast.success('Información eliminada con éxito'); // Notificación de éxito
+        } catch (error) {
+            console.error('Error al eliminar la información:', error);
+            toast.error('Hubo un problema al eliminar la información'); // Notificación de error
+        } finally {
+            handleCloseDialog();
+        }
     };
+    
 
     const handleDeleteConfirmation = (info: TransportInfo) => {
         setCurrentInfo(info);
