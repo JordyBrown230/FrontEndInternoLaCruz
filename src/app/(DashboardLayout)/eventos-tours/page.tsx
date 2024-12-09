@@ -52,9 +52,9 @@ const EventosToursList: React.FC = () => {
     setSearchQuery(query);
     setFilteredEventosTours(
       eventosTours.filter(evento =>
-        evento.nombre.toLowerCase().includes(query) ||
-        evento.ubicacion.toLowerCase().includes(query) ||
-        (evento.descripcion && evento.descripcion.toLowerCase().includes(query))
+        evento.name.toLowerCase().includes(query) ||
+        evento.location.toLowerCase().includes(query) ||
+        (evento.description && evento.description.toLowerCase().includes(query))
       )
     );
   };
@@ -63,7 +63,7 @@ const EventosToursList: React.FC = () => {
     if (eventoTourToDelete !== null) {
       try {
         await deleteEventoTour(eventoTourToDelete);
-        const updatedEventosTours = eventosTours.filter(evento => evento.idEventoTour !== eventoTourToDelete);
+        const updatedEventosTours = eventosTours.filter(evento => evento.tourEventId !== eventoTourToDelete);
         setEventosTours(updatedEventosTours);
         setFilteredEventosTours(updatedEventosTours);
         showSnackbar('Evento o tour eliminado con éxito.', 'success');
@@ -118,15 +118,15 @@ const EventosToursList: React.FC = () => {
           {filteredEventosTours.length > 0 ? (
             <Grid container spacing={4} justifyContent="center">
               {filteredEventosTours.map((evento) => (
-                <Grid item xs={12} md={6} lg={4} key={evento.idEventoTour} data-aos="fade-up">
+                <Grid item xs={12} md={6} lg={4} key={evento.tourEventId} data-aos="fade-up">
                   <Card sx={{ maxHeight: 420, display: 'flex', flexDirection: 'column' }}>
-                    <Carousel>
-                      {evento.fotosEventoTour && evento.fotosEventoTour.length > 0 ? (
-                        evento.fotosEventoTour.map((foto, index) => (
+                  <Carousel>
+                      {evento.Images && evento.Images.length > 0 ? (
+                        evento.Images.map((image, index) => (
                           <img
                             key={index}
-                            src={`data:image/jpeg;base64,${Buffer.from(foto.foto).toString('base64')}`}
-                            alt="Evento o Tour"
+                            src={image.url} // Asegúrate de que `url` sea el campo que contiene la URL completa de la imagen
+                            alt={`Imagen del evento/tour ${index + 1}`}
                             height="200"
                             width="100%"
                             style={{ objectFit: 'cover' }}
@@ -139,20 +139,20 @@ const EventosToursList: React.FC = () => {
                       )}
                     </Carousel>
                     <CardContent>
-                      <Typography gutterBottom variant="h5">{evento.nombre}</Typography>
+                      <Typography gutterBottom variant="h5">{evento.name}</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {evento.descripcion}
+                        {evento.description}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" mt={1}>
-                        Ubicación: {evento.ubicacion}
+                        Ubicación: {evento.location}
                       </Typography>
                       <Box mt={2}>
-                        <Link href={`/guardar-evento-tour?id=${evento.idEventoTour}`} passHref>
+                        <Link href={`/guardar-evento-tour?id=${evento.tourEventId}`} passHref>
                           <IconButton color="primary">
                             <EditIcon />
                           </IconButton>
                         </Link>
-                        <IconButton color="error" onClick={() => openDeleteDialog(evento.idEventoTour)}>
+                        <IconButton color="error" onClick={() => openDeleteDialog(evento.tourEventId)}>
                           <DeleteIcon />
                         </IconButton>
                       </Box>

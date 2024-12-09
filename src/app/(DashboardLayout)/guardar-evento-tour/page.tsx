@@ -106,31 +106,27 @@ const EventoTourForm: React.FC = () => {
   const loadEventoTourData = async (id: string) => {
     try {
       const data = await getEventosTours();
-      const eventoTour = data.find(evt => evt.idEventoTour === parseInt(id));
+      const eventoTour = data.find(evt => evt.tourEventId === parseInt(id));
       if (eventoTour) {
-        const { tipo, nombre, descripcion, fechaInicio, fechaFin, horaInicio, horaFin, ubicacion, precio, capacidadMaxima, tipoActividad, organizador, requerimientosEspeciales, duracionEstimada, puntoEncuentro, fotosEventoTour, urlWaze, urlGoogleMaps, website } = eventoTour;
-        setTipo(tipo || '');
-        setNombre(nombre || '');
-        setDescripcion(descripcion || '');
-        setFechaInicio(fechaInicio ? new Date(fechaInicio).toISOString().substring(0, 10) : '');
-        setFechaFin(fechaFin ? new Date(fechaFin).toISOString().substring(0, 10) : '');
-        setHoraInicio(horaInicio || '');
-        setHoraFin(horaFin || '');
-        setUbicacion(ubicacion || '');
-        setPrecio(precio?.toString() || '');
-        setCapacidadMaxima(capacidadMaxima?.toString() || '');
-        setTipoActividad(tipoActividad || '');
-        setOrganizador(organizador || '');
-        setRequerimientosEspeciales(requerimientosEspeciales || '');
-        setDuracionEstimada(duracionEstimada || '');
-        setPuntoEncuentro(puntoEncuentro || '');
-        setUrlGoogleMaps(urlGoogleMaps || '');
-        setUrlWaze(urlWaze || '');
+        const { type, name, description, startDate, endDate, startTime, endTime, location, price, maxCapacity, activityType, organizer, specialRequirements, estimatedDuration,meetingPoint, wazeUrl, googleMapsUrl, website } = eventoTour;
+        setTipo(type || '');
+        setNombre(name || '');
+        setDescripcion(description || '');
+        setFechaInicio(startDate ? new Date(startDate).toISOString().substring(0, 10) : '');
+        setFechaFin(endDate ? new Date(endDate).toISOString().substring(0, 10) : '');
+        setHoraInicio(startTime || '');
+        setHoraFin(endTime || '');
+        setUbicacion(location || '');
+        setPrecio(price?.toString() || '');
+        setCapacidadMaxima(maxCapacity?.toString() || '');
+        setTipoActividad(activityType || '');
+        setOrganizador(organizer || '');
+        setRequerimientosEspeciales(specialRequirements || '');
+        setDuracionEstimada(estimatedDuration || '');
+        setPuntoEncuentro(meetingPoint || '');
+        setUrlGoogleMaps(googleMapsUrl || '');
+        setUrlWaze(wazeUrl || '');
         setWebsite(website || '');
-        setExistingFotos(fotosEventoTour.map(foto => ({
-          id: foto.idFoto,
-          foto: `data:image/jpeg;base64,${Buffer.from(foto.foto).toString('base64')}`,
-        })));
       }
     } catch (error) {
       message.error('Error al cargar el evento o tour.');
@@ -179,28 +175,26 @@ const EventoTourForm: React.FC = () => {
 
     try {
       await createOrUpdateEventoTour({
-        tipo,
-        nombre,
-        descripcion,
-        fechaInicio,
-        fechaFin,
-        horaInicio,
-        horaFin,
-        ubicacion,
-        precio: parseFloat(precio),
-        capacidadMaxima: parseInt(capacidadMaxima, 10),
-        tipoActividad,
-        organizador,
-        requerimientosEspeciales,
-        duracionEstimada,
-        puntoEncuentro,
-        urlWaze,
-        urlGoogleMaps,
-        website,
-        idEventoTour: eventoTourId ? parseInt(eventoTourId, 10) : undefined,
-        fotos,
-        existingFotosToKeep: existingFotos.map(f => f.id),
-        fotosParaEliminar,
+        type: tipo, // String, obligatorio
+        name: nombre, // String, obligatorio
+        description: descripcion, // String, obligatorio
+        startDate: fechaInicio, // String (YYYY-MM-DD), obligatorio
+        startTime: horaInicio, // String (HH:mm:ss), obligatorio
+        location: ubicacion, // String, obligatorio
+        endDate: fechaFin || undefined, // String (YYYY-MM-DD), opcional
+        endTime: horaFin || undefined, // String (HH:mm:ss), opcional
+        price: precio ? parseFloat(precio) : undefined, // Number, opcional
+        maxCapacity: capacidadMaxima ? parseInt(capacidadMaxima) : undefined, // Number, opcional
+        activityType: tipoActividad || undefined, // String, opcional
+        organizer: organizador || undefined, // String, opcional
+        specialRequirements: requerimientosEspeciales || undefined, // String, opcional
+        estimatedDuration: duracionEstimada || undefined, // String, opcional
+        meetingPoint: puntoEncuentro || undefined, // String, opcional
+        tourEventId: eventoTourId || undefined, // Number, opcional
+        wazeUrl: urlWaze || undefined, // String, opcional
+        googleMapsUrl: urlGoogleMaps || undefined, // String, opcional
+        website: website || undefined, // String, opcional
+        files: fotos || undefined, // Array<File>, opcional
       } as EventoTourData);
       message.success('Evento o tour guardado correctamente.');
       router.push('/eventos-tours');
@@ -246,6 +240,7 @@ const EventoTourForm: React.FC = () => {
               <TextField
                 label="Descripción"
                 fullWidth
+                required
                 multiline
                 rows={4}
                 value={descripcion}

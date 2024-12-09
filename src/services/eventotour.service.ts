@@ -1,136 +1,131 @@
 import axiosApi from './api.service';
 
-export interface FotoEventoTour {
-  idFoto: number;
-  foto: string;
+// Interfaces de datos
+export interface Photo {
+  imageId: number;
+  filename: string;
+  url: string;
 }
 
 export interface EventoTour {
-  idEventoTour: number;
-  tipo: string; 
-  nombre: string;
-  descripcion: string;
-  fechaInicio: string;
-  fechaFin?: string;
-  horaInicio: string;
-  horaFin?: string;
-  ubicacion: string;
-  precio?: number;
-  capacidadMaxima?: number;
-  tipoActividad?: string;
-  organizador?: string;
-  requerimientosEspeciales?: string;
-  duracionEstimada?: string;
-  urlWaze?: string;
-  urlGoogleMaps?: string;
+  tourEventId: number;
+  type: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate?: string;
+  startTime: string;
+  endTime?: string;
+  location: string;
+  price?: number;
+  maxCapacity?: number;
+  activityType?: string;
+  organizer?: string;
+  specialRequirements?: string;
+  estimatedDuration?: string;
+  wazeUrl?: string;
+  googleMapsUrl?: string;
   website?: string;
-  puntoEncuentro?: string;
-  fotosEventoTour: FotoEventoTour[];
+  meetingPoint?: string;
+  Images: Photo[];
 }
 
-// Interfaz para los datos de creación o actualización de un evento o tour
 export interface EventoTourData {
-  tipo: string;
-  nombre: string;
-  descripcion: string;
-  fechaInicio: string;
-  fechaFin?: string;
-  horaInicio: string;
-  horaFin?: string;
-  ubicacion: string;
-  precio?: number;
-  capacidadMaxima?: number;
-  tipoActividad?: string;
-  organizador?: string;
-  requerimientosEspeciales?: string;
-  duracionEstimada?: string;
-  puntoEncuentro?: string;
-  idEventoTour?: number; 
-  fotos?: File[];
-  existingFotosToKeep?: number[];
-  fotosParaEliminar?: number[];
-  urlWaze?: string;
-  urlGoogleMaps?: string;
+  type: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate?: string;
+  startTime: string;
+  endTime?: string;
+  location: string;
+  price?: number;
+  maxCapacity?: number;
+  activityType?: string;
+  organizer?: string;
+  specialRequirements?: string;
+  estimatedDuration?: string;
+  meetingPoint?: string;
+  tourEventId?: number; // Para actualización
+  files?: File[]; // Nuevas fotos a subir
+  wazeUrl?: string;
+  googleMapsUrl?: string;
   website?: string;
 }
 
-// Servicio para obtener todos los eventos y tours
+// Obtener todos los eventos de tours
 export const getEventosTours = async (): Promise<EventoTour[]> => {
   try {
-    const response = await axiosApi.get<EventoTour[]>('/eventos-tours');
-    return response.data;
+    const response = await axiosApi.get<{ data: EventoTour[] }>('/eventos-tours/listar');
+    console.log(response.data.data)
+    return response.data.data;
   } catch (error) {
-    console.error('Error fetching eventos/tours:', error);
+    console.error('Error fetching tour events:', error);
     throw error;
   }
 };
 
-// Servicio para eliminar un evento o tour
+// Eliminar un evento de tour
 export const deleteEventoTour = async (id: number): Promise<void> => {
   try {
-    await axiosApi.delete(`/eliminar-evento-tour/${id}`);
+    await axiosApi.delete(`/eventos-tours/eliminar/${id}`);
   } catch (error) {
-    console.error('Error deleting evento/tour:', error);
+    console.error('Error deleting tour event:', error);
     throw error;
   }
 };
 
-// Servicio para crear o actualizar un evento o tour
-export const createOrUpdateEventoTour = async (
-  eventoTourData: EventoTourData
-): Promise<any> => {
+// Crear o actualizar un evento de tour
+export const createOrUpdateEventoTour = async (tourEventData: EventoTourData): Promise<any> => {
   const formData = new FormData();
 
-  formData.append('tipo', eventoTourData.tipo);
-  formData.append('nombre', eventoTourData.nombre);
-  formData.append('descripcion', eventoTourData.descripcion);
-  formData.append('fechaInicio', eventoTourData.fechaInicio);
-  formData.append('horaInicio', eventoTourData.horaInicio);
-  formData.append('ubicacion', eventoTourData.ubicacion);
+  // Agrega los campos estándar
+  formData.append('type', tourEventData.type);
+  formData.append('name', tourEventData.name);
+  formData.append('description', tourEventData.description);
+  formData.append('startDate', tourEventData.startDate);
+  formData.append('startTime', tourEventData.startTime);
+  formData.append('location', tourEventData.location);
 
-  if (eventoTourData.fechaFin) formData.append('fechaFin', eventoTourData.fechaFin);
-  if (eventoTourData.horaFin) formData.append('horaFin', eventoTourData.horaFin);
-  if (eventoTourData.precio) formData.append('precio', String(eventoTourData.precio));
-  if (eventoTourData.capacidadMaxima) formData.append('capacidadMaxima', String(eventoTourData.capacidadMaxima));
-  if (eventoTourData.tipoActividad) formData.append('tipoActividad', eventoTourData.tipoActividad);
-  if (eventoTourData.organizador) formData.append('organizador', eventoTourData.organizador);
-  if (eventoTourData.requerimientosEspeciales) formData.append('requerimientosEspeciales', eventoTourData.requerimientosEspeciales);
-  if (eventoTourData.duracionEstimada) formData.append('duracionEstimada', eventoTourData.duracionEstimada);
-  if (eventoTourData.puntoEncuentro) formData.append('puntoEncuentro', eventoTourData.puntoEncuentro);
-  if (eventoTourData.idEventoTour) formData.append('idEventoTour', String(eventoTourData.idEventoTour));
-  if (eventoTourData.urlWaze) formData.append('urlWaze', eventoTourData.urlWaze);
-  if (eventoTourData.urlGoogleMaps) formData.append('urlGoogleMaps', eventoTourData.urlGoogleMaps);
-  if (eventoTourData.website) formData.append('website', eventoTourData.website);
-  
-  if (eventoTourData.fotos) {
-    Array.from(eventoTourData.fotos).forEach((file) => {
-      formData.append('fotos', file);
-    });
+  if (tourEventData.endDate) formData.append('endDate', tourEventData.endDate);
+  if (tourEventData.endTime) formData.append('endTime', tourEventData.endTime);
+  if (tourEventData.price) formData.append('price', String(tourEventData.price));
+  if (tourEventData.maxCapacity) formData.append('maxCapacity', String(tourEventData.maxCapacity));
+  if (tourEventData.activityType) formData.append('activityType', tourEventData.activityType);
+  if (tourEventData.organizer) formData.append('organizer', tourEventData.organizer);
+  if (tourEventData.specialRequirements) formData.append('specialRequirements', tourEventData.specialRequirements);
+  if (tourEventData.estimatedDuration) formData.append('estimatedDuration', tourEventData.estimatedDuration);
+  if (tourEventData.meetingPoint) formData.append('meetingPoint', tourEventData.meetingPoint);
+  if (tourEventData.tourEventId) {
+    formData.append('tourEventId', String(tourEventData.tourEventId));
   }
+  if (tourEventData.wazeUrl) formData.append('wazeUrl', tourEventData.wazeUrl);
+  if (tourEventData.googleMapsUrl) formData.append('googleMapsUrl', tourEventData.googleMapsUrl);
+  if (tourEventData.website) formData.append('website', tourEventData.website);
 
-  // Agrega fotos para mantener
-  if (eventoTourData.existingFotosToKeep) {
-    eventoTourData.existingFotosToKeep.forEach((id) => {
-      formData.append('existingFotosToKeep[]', String(id));
-    });
-  }
-
-  // Agrega fotos para eliminar
-  if (eventoTourData.fotosParaEliminar) {
-    eventoTourData.fotosParaEliminar.forEach((id) => {
-      formData.append('fotosParaEliminar[]', String(id));
+  console.log(tourEventData.files)
+  // Agrega las nuevas fotos
+  if (tourEventData.files) {
+    tourEventData.files.forEach((file) => {
+      formData.append('images', file); // Clave `photos` usada en el backend
     });
   }
 
   try {
-    const response = await axiosApi.post('/agregar-evento-tour', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = tourEventData.tourEventId
+      ? await axiosApi.put(`/eventos-tours/actualizar/${tourEventData.tourEventId}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+      : await axiosApi.post('/eventos-tours/agregar', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
     return response.data;
   } catch (error) {
-    console.error('Error creating/updating evento/tour:', error);
+    console.error('Error creating or updating the tour event:', error);
     throw error;
   }
 };
