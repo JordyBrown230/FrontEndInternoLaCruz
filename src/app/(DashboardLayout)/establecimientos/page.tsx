@@ -33,9 +33,11 @@ const EstablecimientosList: React.FC = () => {
   const fetchEstablecimientos = async () => {
     try {
       const data = await getEstablecimientos();
+      console.log(data)
       if (data && data.length > 0) {
         setEstablecimientos(data);
         setFilteredEstablecimientos(data);
+        console.log('Establecimientos actualizados:', data); // Usa `data` en lugar de `establecimientos`
         showSnackbar('Establecimientos cargados exitosamente.', 'success');
       } else {
         setEstablecimientos([]);
@@ -52,9 +54,9 @@ const EstablecimientosList: React.FC = () => {
     setSearchQuery(query);
     setFilteredEstablecimientos(
       establecimientos.filter(est =>
-        est.nombre.toLowerCase().includes(query) ||
-        est.direccion.toLowerCase().includes(query) ||
-        est.descripcion.toLowerCase().includes(query)
+        est.name.toLowerCase().includes(query) ||
+        est.address.toLowerCase().includes(query) ||
+        est.description.toLowerCase().includes(query)
       )
     );
   };
@@ -63,7 +65,7 @@ const EstablecimientosList: React.FC = () => {
     if (establecimientoToDelete !== null) {
       try {
         await deleteEstablecimiento(establecimientoToDelete);
-        const updatedEstablecimientos = establecimientos.filter(est => est.idEstablecimiento !== establecimientoToDelete);
+        const updatedEstablecimientos = establecimientos.filter(est => est.establishmentId !== establecimientoToDelete);
         setEstablecimientos(updatedEstablecimientos);
         setFilteredEstablecimientos(updatedEstablecimientos);
         showSnackbar('Establecimiento eliminado con éxito.', 'success');
@@ -92,7 +94,7 @@ const EstablecimientosList: React.FC = () => {
     <PageContainer title="Establecimientos" description="Gestión de establecimientos">
       <DashboardCard>
         <>
-        <Box textAlign="center" mb={4}>
+          <Box textAlign="center" mb={4}>
             <Typography variant="h2" gutterBottom data-aos="fade-down">Gestión de Establecimientos</Typography>
             <Typography variant="h6" color="text.secondary" data-aos="fade-down">
               Administra los establecimientos de tu localidad.
@@ -101,7 +103,7 @@ const EstablecimientosList: React.FC = () => {
               <Button variant="contained" color="primary" sx={{ mt: 2 }}>+ Agregar Establecimiento</Button>
             </Link>
           </Box>
-          
+
           <TextField
             label="Buscar"
             variant="outlined"
@@ -118,15 +120,15 @@ const EstablecimientosList: React.FC = () => {
           {filteredEstablecimientos.length > 0 ? (
             <Grid container spacing={4} justifyContent="center">
               {filteredEstablecimientos.map((establecimiento) => (
-                <Grid item xs={12} md={6} lg={4} key={establecimiento.idEstablecimiento} data-aos="fade-up">
+                <Grid item xs={12} md={6} lg={4} key={establecimiento.establishmentId} data-aos="fade-up">
                   <Card sx={{ maxHeight: 410, display: 'flex', flexDirection: 'column' }}>
                     <Carousel>
-                      {establecimiento.fotosEstablecimiento && establecimiento.fotosEstablecimiento.length > 0 ? (
-                        establecimiento.fotosEstablecimiento.map((foto, index) => (
+                      {establecimiento.Images && establecimiento.Images.length > 0 ? (
+                        establecimiento.Images.map((image, index) => (
                           <img
                             key={index}
-                            src={`data:image/jpeg;base64,${Buffer.from(foto.foto).toString('base64')}`}
-                            alt="Establecimiento"
+                            src={image.url} // Asegúrate de que `url` sea el campo que contiene la URL completa de la imagen
+                            alt={`Imagen del establecimiento ${index + 1}`}
                             height="200"
                             width="100%"
                             style={{ objectFit: 'cover' }}
@@ -138,21 +140,22 @@ const EstablecimientosList: React.FC = () => {
                         </Typography>
                       )}
                     </Carousel>
+
                     <CardContent>
-                      <Typography gutterBottom variant="h5">{establecimiento.nombre}</Typography>
+                      <Typography gutterBottom variant="h5">{establecimiento.name}</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {establecimiento.descripcion}
+                        {establecimiento.description}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" mt={1}>
-                        Dirección: {establecimiento.direccion}
+                        Dirección: {establecimiento.address}
                       </Typography>
                       <Box mt={2}>
-                        <Link href={`/guardar-establecimiento?id=${establecimiento.idEstablecimiento}`} passHref>
+                        <Link href={`/guardar-establecimiento?id=${establecimiento.establishmentId}`} passHref>
                           <IconButton color="primary">
                             <EditIcon />
                           </IconButton>
                         </Link>
-                        <IconButton color="error" onClick={() => openDeleteDialog(establecimiento.idEstablecimiento)}>
+                        <IconButton color="error" onClick={() => openDeleteDialog(establecimiento.establishmentId)}>
                           <DeleteIcon />
                         </IconButton>
                       </Box>

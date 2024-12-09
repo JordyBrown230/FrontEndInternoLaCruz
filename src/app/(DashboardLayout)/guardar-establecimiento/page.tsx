@@ -19,8 +19,8 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/system';
 import { createOrUpdateEstablecimiento, EstablecimientoData, getEstablecimientos } from '@/services/establecimiento.service';
-import { getPropietarios, createPropietario, Propietario } from '@/services/propietario.service';
-import { getCategorias, Categoria, createCategoria, deleteCategoria } from '@/services/categoria.service';
+import { getPropietarios, createPropietario, Owner } from '@/services/propietario.service';
+import { getCategorias, Category, createCategoria, deleteCategoria } from '@/services/categoria.service';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CameraAlt, Delete } from '@mui/icons-material';
 import { message } from 'antd';
@@ -44,8 +44,8 @@ const EstablecimientoForm: React.FC = () => {
   const [fotos, setFotos] = useState<File[]>([]);
   const [filePreview, setFilePreview] = useState<string[]>([]);
   const [existingFotos, setExistingFotos] = useState<{ id: number; foto: string }[]>([]);
-  const [propietarios, setPropietarios] = useState<Propietario[]>([]);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [propietarios, setPropietarios] = useState<Owner[]>([]);
+  const [categorias, setCategorias] = useState<Category[]>([]);
   const [isCreatingPropietario, setIsCreatingPropietario] = useState(false);
   const [newPropietarioNombre, setNewPropietarioNombre] = useState('');
   const [newPropietarioTelefono, setNewPropietarioTelefono] = useState('');
@@ -86,7 +86,7 @@ const EstablecimientoForm: React.FC = () => {
       const data = await getPropietarios();
       setPropietarios(data);
     } catch (error) {
-      message.error('Error al cargar propietarios.');
+      console.error('Error al cargar propietarios:', error);
     }
   };
 
@@ -225,12 +225,12 @@ const EstablecimientoForm: React.FC = () => {
 
     try {
       const newPropietario = await createPropietario({
-        nombre: newPropietarioNombre,
-        telefono: newPropietarioTelefono,
-        correo: newPropietarioCorreo,
+        name: newPropietarioNombre,
+        phoneNumber: newPropietarioTelefono,
+        email: newPropietarioCorreo,
       });
       setPropietarios((prev) => [...prev, newPropietario]);
-      setIdPropietario(newPropietario.idPropietario.toString());
+      setIdPropietario(newPropietario.ownerId.toString());
       message.success('Propietario creado correctamente.');
       handleCancelCreatePropietario();
     } catch (error) {
@@ -245,9 +245,9 @@ const EstablecimientoForm: React.FC = () => {
     }
 
     try {
-      const newCategoria = await createCategoria({ nombre: newCategoriaNombre });
+      const newCategoria = await createCategoria({ name: newCategoriaNombre });
       setCategorias((prev) => [...prev, newCategoria]);
-      setIdCategoria(newCategoria.idCategoria.toString());
+      setIdCategoria(newCategoria.categoryId.toString());
 
       message.success('Categoría creada correctamente.');
       handleCancelCreateCategoria();
@@ -259,22 +259,18 @@ const EstablecimientoForm: React.FC = () => {
   const loadEstablecimientoData = async (id: string) => {
     try {
       const response = await getEstablecimientos();
-      const establecimiento = response.find((est) => est.idEstablecimiento === parseInt(id));
+      const establecimiento = response.find((est) => est.establishmentId === parseInt(id));
       if (establecimiento) {
-        const { nombre, direccion, descripcion, propietario, categoria, fotosEstablecimiento, telefono, urlWaze, urlGoogleMaps, website } = establecimiento;
-        setNombre(nombre || '');
-        setDireccion(direccion || '');
-        setDescripcion(descripcion || '');
-        setIdPropietario(propietario?.idPropietario ? propietario.idPropietario.toString() : '');
-        setIdCategoria(categoria?.idCategoria ? categoria.idCategoria.toString() : '');
-        setTelefono(telefono || '');
-        setUrlWaze(urlWaze || '');
-        setUrlGoogleMaps(urlGoogleMaps || '');
+        const { name, address, description, owner, category, Images, phoneNumber, wazeUrl, googleMapsUrl, website } = establecimiento;
+        setNombre(name || '');
+        setDireccion(address || '');
+        setDescripcion(description || '');
+        setIdPropietario(owner?.ownerId ? owner.ownerId.toString() : '');
+        setIdCategoria(category?.categoryId ? category.categoryId.toString() : '');
+        setTelefono(phoneNumber || '');
+        setUrlWaze(wazeUrl || '');
+        setUrlGoogleMaps(googleMapsUrl || '');
         setWebsite(website || '');
-        setExistingFotos(fotosEstablecimiento.map((foto) => ({
-          id: foto.idFoto,
-          foto: `data:image/jpeg;base64,${Buffer.from(foto.foto).toString('base64')}`,
-        })));
       }
     } catch (error) {
       message.error('Error al cargar el establecimiento.');
@@ -291,19 +287,17 @@ const EstablecimientoForm: React.FC = () => {
     try {
       console.log(telefono)
       await createOrUpdateEstablecimiento({
-        nombre,
-        direccion,
-        descripcion,
-        telefono,
-        urlWaze,
-        urlGoogleMaps,
+        name: nombre,
+        address: direccion,
+        description: descripcion,
+        phoneNumber: telefono,
+        wazeUrl: urlWaze,
+        googleMapsUrl: urlGoogleMaps,
         website,
-        idPropietario: parseInt(idPropietario, 10),
-        idCategoria: parseInt(idCategoria, 10),
-        idEstablecimiento: establecimientoId ? parseInt(establecimientoId, 10) : undefined,
-        fotos,
-        existingFotosToKeep: existingFotos.map(f => f.id),
-        fotosParaEliminar,
+        ownerId: parseInt(idPropietario, 10),
+        categoryId: parseInt(idCategoria, 10),
+        establishmentId: establecimientoId ? parseInt(establecimientoId, 10) : undefined,
+        files: fotos, // Pasa los archivos seleccionados
       } as EstablecimientoData);
       message.success('Establecimiento guardado correctamente.');
       resetForm();
@@ -383,11 +377,12 @@ const EstablecimientoForm: React.FC = () => {
                   }}
                 >
                   <MenuItem value="create">+ Crear nuevo propietario</MenuItem>
-                  {propietarios.map((propietario) => (
-                    <MenuItem key={propietario.idPropietario} value={propietario.idPropietario}>
-                      {propietario.nombre}
+                  {Array.isArray(propietarios) && propietarios.map((propietario) => (
+                    <MenuItem key={propietario.ownerId} value={propietario.ownerId}>
+                      {propietario.name}
                     </MenuItem>
                   ))}
+
                 </Select>
               </FormControl>
             </Grid>
@@ -452,12 +447,12 @@ const EstablecimientoForm: React.FC = () => {
                 >
                   <MenuItem value="create">+ Crear nueva categoría</MenuItem>
                   {categorias.map((categoria) => (
-                    <MenuItem key={categoria.idCategoria} value={categoria.idCategoria}>
+                    <MenuItem key={categoria.categoryId} value={categoria.categoryId}>
                       <Grid container alignItems="center" justifyContent="space-between">
-                        <Grid item>{categoria.nombre}</Grid>
+                        <Grid item>{categoria.name}</Grid>
                         <Grid item>
                           <IconButton
-                            onClick={() => handleDeleteCategoria(categoria.idCategoria.toString())}
+                            onClick={() => handleDeleteCategoria(categoria.categoryId.toString())}
                             size="small"
                             color="error" // Coloca el icono en rojo
                           >

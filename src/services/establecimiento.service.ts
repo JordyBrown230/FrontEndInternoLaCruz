@@ -1,135 +1,117 @@
-import { StringLiteral } from 'typescript';
 import axiosApi from './api.service';
 
-// Definición de la interfaz para los datos de establecimiento
+// Interfaces de datos
 export interface Foto {
-  idFoto: number;
-  foto: string;
+  imageId: number;
+  filename: string;
+  url: string;
 }
 
 export interface Propietario {
-  idPropietario: number;
-  nombre: string;
-  telefono: string;
-  correo: string;
+  ownerId: number;
+  name: string;
+  phoneNumber: string;
+  email: string;
 }
 
 export interface Categoria {
-  idCategoria: number;
-  nombre: string;
+  categoryId: number;
+  name: string;
 }
 
 export interface Establecimiento {
-  idEstablecimiento: number;
-  nombre: string;
-  direccion: string;
-  descripcion: string;
-  propietario: Propietario;
-  categoria: Categoria;
-  fotosEstablecimiento: Foto[];
-  urlWaze:string;
-  urlGoogleMaps:string;
-  website:string;
-  telefono:string;
+  establishmentId: number;
+  name: string;
+  address: string;
+  description: string;
+  owner: Propietario;
+  category: Categoria;
+  Images: Foto[];
+  wazeUrl: string;
+  googleMapsUrl: string;
+  website: string;
+  phoneNumber: string;
 }
 
 export interface EstablecimientoData {
-  nombre: string;
-  direccion: string;
-  descripcion: string;
-  idPropietario: number;
-  idCategoria: number;
-  idEstablecimiento?: number;
-  urlWaze:string;
-  urlGoogleMaps:string;
-  website:string;
-  telefono:string;
-  fotos?: File[];
-  existingFotosToKeep?: number[]; // IDs of existing photos to retain when updating
+  name: string;
+  address: string;
+  description: string;
+  ownerId: number;
+  categoryId: number;
+  establishmentId?: number;
+  wazeUrl: string;
+  googleMapsUrl: string;
+  website: string;
+  phoneNumber: string;
+  files?: File[]; // Nuevas imágenes a subir
 }
 
+// Obtener todos los establecimientos
 export const getEstablecimientos = async (): Promise<Establecimiento[]> => {
   try {
-    const response = await axiosApi.get<Establecimiento[]>('/establecimientos');
-    console.log(response.data);
-    return response.data;
+    const response = await axiosApi.get<{data:Establecimiento[]}>('/establecimientos/listar');
+    return response.data.data;
   } catch (error) {
-    console.error('Error fetching establecimientos:', error);
+    console.error('Error fetching establishments:', error);
     throw error;
   }
 };
 
+// Eliminar un establecimiento
 export const deleteEstablecimiento = async (id: number): Promise<void> => {
   try {
-    await axiosApi.delete(`/eliminar-establecimiento/${id}`);
+    await axiosApi.delete(`/establecimientos/eliminar/${id}`);
   } catch (error) {
-    console.error('Error deleting establecimiento:', error);
+    console.error('Error deleting establishment:', error);
     throw error;
   }
 };
 
+// Crear o actualizar un establecimiento
 export const createOrUpdateEstablecimiento = async (
-  establecimientoData: {
-    nombre: string;
-    direccion: string;
-    descripcion: string;
-    idPropietario: number;
-    idCategoria: number;
-    idEstablecimiento?: number; // Opcional para actualización
-    fotos?: File[];
-    existingFotosToKeep?: number[];
-    fotosParaEliminar?: number[]; // Nueva lista para fotos a eliminar
-    telefono: string;
-    urlWaze: string;
-    urlGoogleMaps: string;
-    website: string;
-  }
+  establecimientoData: EstablecimientoData
 ): Promise<any> => {
   const formData = new FormData();
 
   // Agrega los campos estándar
-  formData.append('nombre', establecimientoData.nombre);
-  formData.append('direccion', establecimientoData.direccion);
-  formData.append('descripcion', establecimientoData.descripcion);
-  formData.append('idPropietario', String(establecimientoData.idPropietario)); 
-  formData.append('idCategoria', String(establecimientoData.idCategoria));    
-  formData.append('telefono', establecimientoData.telefono);
-  formData.append('urlWaze', establecimientoData.urlWaze);
-  formData.append('urlGoogleMaps', establecimientoData.urlGoogleMaps);
+  formData.append('name', establecimientoData.name);
+  formData.append('address', establecimientoData.address);
+  formData.append('description', establecimientoData.description);
+  formData.append('ownerId', String(establecimientoData.ownerId));
+  formData.append('categoryId', String(establecimientoData.categoryId));
+  formData.append('phoneNumber', establecimientoData.phoneNumber);
+  formData.append('wazeUrl', establecimientoData.wazeUrl);
+  formData.append('googleMapsUrl', establecimientoData.googleMapsUrl);
   formData.append('website', establecimientoData.website);
 
   // Para actualización, incluye el ID del establecimiento
-  if (establecimientoData.idEstablecimiento) {
-    formData.append('idEstablecimiento', String(establecimientoData.idEstablecimiento));
+  if (establecimientoData.establishmentId) {
+    formData.append('establishmentId', String(establecimientoData.establishmentId));
   }
 
   // Agrega las nuevas fotos
-  if (establecimientoData.fotos) {
-    establecimientoData.fotos.forEach((file) => {
-      formData.append('fotos', file);
-    });
-  }
-
-  // Agrega fotos para mantener
-  if (establecimientoData.existingFotosToKeep) {
-    establecimientoData.existingFotosToKeep.forEach((id) => {
-      formData.append('existingFotosToKeep[]', String(id));
-    });
-  }
-
-  // Agrega fotos para eliminar
-  if (establecimientoData.fotosParaEliminar) {
-    establecimientoData.fotosParaEliminar.forEach((id) => {
-      formData.append('fotosParaEliminar[]', String(id));
+  if (establecimientoData.files) {
+    establecimientoData.files.forEach((file) => {
+      formData.append('images', file); // Clave `files` usada en el backend
     });
   }
 
   try {
-    const response = await axiosApi.post('/establecimientos', formData);
+    const response = establecimientoData.establishmentId
+      ? await axiosApi.put(`/establecimientos/actualizar/${establecimientoData.establishmentId}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+      : await axiosApi.post('/establecimientos/agregar', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
     return response.data;
   } catch (error) {
-    console.error('Error creando o actualizando el establecimiento:', error);
+    console.error('Error creating or updating the establishment:', error);
     throw error;
   }
 };
-
