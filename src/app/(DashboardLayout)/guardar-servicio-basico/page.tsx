@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import {
   TextField,
@@ -34,9 +35,8 @@ const ServicioBasicoForm: React.FC = () => {
   const [urlWaze, setUrlWaze] = useState('');
   const [urlGoogleMaps, setUrlGoogleMaps] = useState('');
   const [website, setWebsite] = useState('');
-  const [foto, setFoto] = useState<File | undefined>(undefined);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [removeImage, setRemoveImage] = useState<boolean | undefined>(undefined);
+  const [fotos, setFotos] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [errors, setErrors] = useState({
     nombre: '',
@@ -60,87 +60,43 @@ const ServicioBasicoForm: React.FC = () => {
   const loadServicioBasicoData = async (id: string) => {
     try {
       const response = await getServiciosBasicos();
-      const servicio = response.find((serv) => serv.idServicioBasico === parseInt(id));
+      const servicio = response.find((serv) => serv.basicServiceId === parseInt(id));
       if (servicio) {
-        const { nombre, direccion, descripcion, telefono, horario, urlWaze, urlGoogleMaps, website, foto } = servicio;
-        setNombre(nombre || '');
-        setDireccion(direccion || '');
-        setDescripcion(descripcion || '');
-        setTelefono(telefono || '');
-        setHorario(horario || '');
-        setUrlWaze(urlWaze || '');
-        setUrlGoogleMaps(urlGoogleMaps || '');
+        const { name, address, description, phoneNumber, schedule, wazeUrl, googleMapsUrl, website } = servicio;
+        setNombre(name || '');
+        setDireccion(address || '');
+        setDescripcion(description || '');
+        setTelefono(phoneNumber || '');
+        setHorario(schedule || '');
+        setUrlWaze(wazeUrl || '');
+        setUrlGoogleMaps(googleMapsUrl || '');
         setWebsite(website || '');
-        setFilePreview(foto ? `data:image/jpeg;base64,${Buffer.from(foto).toString('base64')}` : null);
       }
     } catch (error) {
       console.log('Error al cargar el servicio básico.');
     }
   };
 
-  // Validaciones individuales
-  const handleNombreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setNombre(value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      nombre: nombreRegex.test(value) ? '' : 'El nombre solo puede contener letras y espacios.',
-    }));
-  };
-
-  const handleDescripcionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setDescripcion(value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      descripcion: value.trim() !== '' ? '' : 'La descripción es obligatoria.',
-    }));
-  };
-
-  const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setTelefono(value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      telefono: telefonoRegex.test(value) ? '' : 'El teléfono no es válido.',
-    }));
-  };
-
-  const handleUrlWazeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setUrlWaze(value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      urlWaze: value === '' || urlRegex.test(value) ? '' : 'URL de Waze no válida.',
-    }));
-  };
-
-  const handleUrlGoogleMapsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setUrlGoogleMaps(value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      urlGoogleMaps: value === '' || urlRegex.test(value) ? '' : 'URL de Google Maps no válida.',
-    }));
-  };
-
-  const handleWebsiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setWebsite(value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      website: value === '' || urlRegex.test(value) ? '' : 'URL de Website no válida.',
-    }));
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    setFoto(file);
-    setFilePreview(file ? URL.createObjectURL(file) : null);
-    setRemoveImage(false);
+    const newFiles = e.target.files ? Array.from(e.target.files) : [];
+    const totalFiles = fotos.length + newFiles.length;
+    if (totalFiles > 5) {
+      message.error("Solo puedes subir hasta 5 imágenes.");
+      return;
+    }
+    setFotos((prevFotos) => [...prevFotos, ...newFiles]);
+    setFilePreviews((prevPreviews) => [
+      ...prevPreviews,
+      ...newFiles.map((file) => URL.createObjectURL(file)),
+    ]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handleRemoveFoto = (index: number) => {
+    setFotos((prevFotos) => prevFotos.filter((_, i) => i !== index));
+    setFilePreviews((prevPreviews) => prevPreviews.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,21 +107,18 @@ const ServicioBasicoForm: React.FC = () => {
     }
 
     try {
-      const servicioData: ServicioBasicoData = {
-        nombre,
-        direccion,
-        descripcion,
-        telefono,
-        horario,
-        urlWaze,
-        urlGoogleMaps,
+      await createOrUpdateServicioBasico({
+        name: nombre,
+        address: direccion,
+        description: descripcion,
+        phoneNumber: telefono,
+        schedule: horario,
+        wazeUrl: urlWaze,
+        googleMapsUrl: urlGoogleMaps,
         website,
-        idServicioBasico: servicioId ? parseInt(servicioId, 10) : undefined,
-        foto,
-        eliminarFoto: servicioId && removeImage ? true : undefined,
-      };
-
-      await createOrUpdateServicioBasico(servicioData);
+        basicServiceId: servicioId ? parseInt(servicioId, 10) : undefined,
+        files: fotos,
+      } as ServicioBasicoData);
       message.success('Servicio básico guardado correctamente.');
       resetForm();
       router.push('/servicios-basicos');
@@ -183,16 +136,9 @@ const ServicioBasicoForm: React.FC = () => {
     setUrlWaze('');
     setUrlGoogleMaps('');
     setWebsite('');
-    setFoto(undefined);
-    setFilePreview(null);
+    setFotos([]);
+    setFilePreviews([]);
     setErrors({ nombre: '', descripcion: '', telefono: '', urlWaze: '', urlGoogleMaps: '', website: '' });
-    setRemoveImage(undefined);
-  };
-
-  const handleRemoveFoto = () => {
-    setFoto(undefined);
-    setFilePreview(null);
-    setRemoveImage(true);
   };
 
   return (
@@ -208,9 +154,7 @@ const ServicioBasicoForm: React.FC = () => {
                 label="Nombre"
                 fullWidth
                 value={nombre}
-                onChange={handleNombreChange}
-                error={Boolean(errors.nombre)}
-                helperText={errors.nombre}
+                onChange={(e) => setNombre(e.target.value)}
                 required
               />
             </Grid>
@@ -229,9 +173,7 @@ const ServicioBasicoForm: React.FC = () => {
                 multiline
                 rows={4}
                 value={descripcion}
-                onChange={handleDescripcionChange}
-                error={Boolean(errors.descripcion)}
-                helperText={errors.descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
                 required
               />
             </Grid>
@@ -240,9 +182,7 @@ const ServicioBasicoForm: React.FC = () => {
                 label="Teléfono"
                 fullWidth
                 value={telefono}
-                onChange={handleTelefonoChange}
-                error={Boolean(errors.telefono)}
-                helperText={errors.telefono}
+                onChange={(e) => setTelefono(e.target.value)}
                 required
               />
             </Grid>
@@ -259,9 +199,7 @@ const ServicioBasicoForm: React.FC = () => {
                 label="URL Waze"
                 fullWidth
                 value={urlWaze}
-                onChange={handleUrlWazeChange}
-                error={Boolean(errors.urlWaze)}
-                helperText={errors.urlWaze}
+                onChange={(e) => setUrlWaze(e.target.value)}
               />
             </Grid>
             <Grid item xs={12}>
@@ -269,9 +207,7 @@ const ServicioBasicoForm: React.FC = () => {
                 label="URL Google Maps"
                 fullWidth
                 value={urlGoogleMaps}
-                onChange={handleUrlGoogleMapsChange}
-                error={Boolean(errors.urlGoogleMaps)}
-                helperText={errors.urlGoogleMaps}
+                onChange={(e) => setUrlGoogleMaps(e.target.value)}
               />
             </Grid>
             <Grid item xs={12}>
@@ -279,9 +215,7 @@ const ServicioBasicoForm: React.FC = () => {
                 label="Website"
                 fullWidth
                 value={website}
-                onChange={handleWebsiteChange}
-                error={Boolean(errors.website)}
-                helperText={errors.website}
+                onChange={(e) => setWebsite(e.target.value)}
               />
             </Grid>
 
@@ -289,28 +223,35 @@ const ServicioBasicoForm: React.FC = () => {
             <Grid item xs={12}>
               <Button variant="contained" component="label">
                 <CameraAlt sx={{ mr: 1 }} />
-                Adjuntar foto
-                <input type="file" accept="image/*"
-                  hidden onChange={handleFileChange} ref={fileInputRef} />
+                Adjuntar fotos
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  multiple
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
+                />
               </Button>
-              {filePreview && (
+              {filePreviews.length > 0 && (
                 <Grid container spacing={2} mt={2}>
-                  <Grid item xs={4}>
-                    <Box position="relative">
-                      <img src={filePreview} alt="preview" style={{ width: '100%' }} />
-                      <IconButton
-                        onClick={handleRemoveFoto}
-                        style={{ position: 'absolute', top: 0, right: 0 }}
-                      >
-                        <Delete color="error" />
-                      </IconButton>
-                    </Box>
-                  </Grid>
+                  {filePreviews.map((src, index) => (
+                    <Grid item xs={4} key={index}>
+                      <Box position="relative">
+                        <img src={src} alt={`preview-${index}`} style={{ width: '100%' }} />
+                        <IconButton
+                          onClick={() => handleRemoveFoto(index)}
+                          style={{ position: 'absolute', top: 0, right: 0 }}
+                        >
+                          <Delete color="error" />
+                        </IconButton>
+                      </Box>
+                    </Grid>
+                  ))}
                 </Grid>
               )}
             </Grid>
 
-            {/* Botón para Enviar el Formulario */}
             <Grid item xs={12}>
               <Button
                 type="submit"

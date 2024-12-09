@@ -52,10 +52,10 @@ const ServiciosBasicosList: React.FC = () => {
     setSearchQuery(query);
     setFilteredServiciosBasicos(
       serviciosBasicos.filter(servicio =>
-        servicio.nombre.toLowerCase().includes(query) ||
-        servicio.descripcion.toLowerCase().includes(query) ||
-        (servicio.telefono && servicio.telefono.toLowerCase().includes(query)) ||
-        (servicio.direccion && servicio.direccion.toLowerCase().includes(query))
+        servicio.name.toLowerCase().includes(query) ||
+        servicio.description.toLowerCase().includes(query) ||
+        (servicio.phoneNumber && servicio.phoneNumber.toLowerCase().includes(query)) ||
+        (servicio.address && servicio.address.toLowerCase().includes(query))
       )
     );
   };
@@ -64,7 +64,7 @@ const ServiciosBasicosList: React.FC = () => {
     if (servicioToDelete !== null) {
       try {
         await deleteServicioBasico(servicioToDelete);
-        const updatedServicios = serviciosBasicos.filter(servicio => servicio.idServicioBasico !== servicioToDelete);
+        const updatedServicios = serviciosBasicos.filter(servicio => servicio.basicServiceId !== servicioToDelete);
         setServiciosBasicos(updatedServicios);
         setFilteredServiciosBasicos(updatedServicios);
         showSnackbar('Servicio básico eliminado con éxito.', 'success');
@@ -119,33 +119,41 @@ const ServiciosBasicosList: React.FC = () => {
           {filteredServiciosBasicos.length > 0 ? (
             <Grid container spacing={4} justifyContent="center">
               {filteredServiciosBasicos.map((servicio) => (
-                <Grid item xs={12} md={6} lg={4} key={servicio.idServicioBasico} data-aos="fade-up">
+                <Grid item xs={12} md={6} lg={4} key={servicio.basicServiceId} data-aos="fade-up">
                   <Card sx={{ maxHeight: 410, display: 'flex', flexDirection: 'column' }}>
-                    <Carousel  navButtonsAlwaysInvisible={true}>
-                      {servicio.foto && (
-                        <img
-                        src={`data:image/jpeg;base64,${Buffer.from(servicio.foto).toString('base64')}`}
-                        alt="Servicio Básico"
-                          height="300"
-                          width="100%"
-                        />
+                  <Carousel>
+                      {servicio.Images && servicio.Images.length > 0 ? (
+                        servicio.Images.map((image, index) => (
+                          <img
+                            key={index}
+                            src={image.url} // Asegúrate de que `url` sea el campo que contiene la URL completa de la imagen
+                            alt={`Imagen del establecimiento ${index + 1}`}
+                            height="200"
+                            width="100%"
+                            style={{ objectFit: 'cover' }}
+                          />
+                        ))
+                      ) : (
+                        <Typography variant="body2" mt={2} color="textSecondary" textAlign="center">
+                          No hay fotos disponibles
+                        </Typography>
                       )}
                     </Carousel>
                     <CardContent>
-                      <Typography gutterBottom variant="h5">{servicio.nombre}</Typography>
+                      <Typography gutterBottom variant="h5">{servicio.name}</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {servicio.descripcion}
+                        {servicio.description}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" mt={1}>
-                        Teléfono: {servicio.telefono}
+                        Teléfono: {servicio.phoneNumber}
                       </Typography>
                       <Box mt={2}>
-                      <Link href={`/guardar-servicio-basico?id=${servicio.idServicioBasico}`} passHref>
+                      <Link href={`/guardar-servicio-basico?id=${servicio.basicServiceId}`} passHref>
                       <IconButton color="primary">
                             <EditIcon />
                           </IconButton>
                         </Link>
-                        <IconButton color="error" onClick={() => openDeleteDialog(servicio.idServicioBasico)}>
+                        <IconButton color="error" onClick={() => openDeleteDialog(servicio.basicServiceId!)}>
                           <DeleteIcon />
                         </IconButton>
                       </Box>
