@@ -20,9 +20,8 @@ const FormContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(5),
 }));
 
-// Expresiones regulares para validaciones
 const nombreRegex = /^[A-Za-zÀ-ÿñÑ\s]+$/;
-const telefonoRegex = "";
+const telefonoRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]{7,}$/;
 const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
 
 const ServicioSeguridadForm: React.FC = () => {
@@ -34,22 +33,21 @@ const ServicioSeguridadForm: React.FC = () => {
   const [urlWaze, setUrlWaze] = useState('');
   const [urlGoogleMaps, setUrlGoogleMaps] = useState('');
   const [website, setWebsite] = useState('');
-  const [foto, setFoto] = useState<File | undefined>(undefined); // Cambiado a File | undefined
-  const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [removeImage, setRemoveImage] = useState<boolean | undefined>(undefined); // Cambiado a boolean | undefined
-  const fileInputRef = useRef<HTMLInputElement | null>(null); // Ref para el input de archivo
+  const [fotos, setFotos] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [errors, setErrors] = useState({
     nombre: '',
     descripcion: '',
     telefono: '',
     urlWaze: '',
     urlGoogleMaps: '',
-    website: ''
+    website: '',
   });
 
   const searchParams = useSearchParams();
   const router = useRouter();
-  const servicioId = searchParams.get("id");
+  const servicioId = searchParams.get('id');
 
   useEffect(() => {
     if (servicioId) {
@@ -60,110 +58,83 @@ const ServicioSeguridadForm: React.FC = () => {
   const loadServicioSeguridadData = async (id: string) => {
     try {
       const response = await getServiciosSeguridad();
-      const servicio = response.find((serv) => serv.idServicioSeguridad === parseInt(id));
+      const servicio = response.find((serv) => serv.securityServiceId === parseInt(id));
       if (servicio) {
-        const { nombre, direccion, descripcion, telefono, horario, urlWaze, urlGoogleMaps, website, foto } = servicio;
-        setNombre(nombre || '');
-        setDireccion(direccion || '');
-        setDescripcion(descripcion || '');
-        setTelefono(telefono || '');
-        setHorario(horario || '');
-        setUrlWaze(urlWaze || '');
-        setUrlGoogleMaps(urlGoogleMaps || '');
+        const { name, address, description, phoneNumber, schedule, wazeUrl, googleMapsUrl, website } = servicio;
+        setNombre(name || '');
+        setDireccion(address || '');
+        setDescripcion(description || '');
+        setTelefono(phoneNumber || '');
+        setHorario(schedule || '');
+        setUrlWaze(wazeUrl || '');
+        setUrlGoogleMaps(googleMapsUrl || '');
         setWebsite(website || '');
-        setFilePreview(foto ? `data:image/jpeg;base64,${Buffer.from(foto).toString('base64')}` : null);
       }
     } catch (error) {
       message.error('Error al cargar el servicio de seguridad.');
     }
   };
 
-  const handleNombreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setNombre(value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      nombre: nombreRegex.test(value) ? '' : 'El nombre solo puede contener letras y espacios.',
-    }));
-  };
-
-  const handleDescripcionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setDescripcion(value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      descripcion: value.trim() !== '' ? '' : 'La descripción es obligatoria.',
-    }));
-  };
-
-  const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setTelefono(value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-    }));
-  };
-
-  const handleUrlWazeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setUrlWaze(value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      urlWaze: value === '' || urlRegex.test(value) ? '' : 'URL de Waze no válida.',
-    }));
-  };
-
-  const handleUrlGoogleMapsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setUrlGoogleMaps(value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      urlGoogleMaps: value === '' || urlRegex.test(value) ? '' : 'URL de Google Maps no válida.',
-    }));
-  };
-
-  const handleWebsiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setWebsite(value);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      website: value === '' || urlRegex.test(value) ? '' : 'URL de Website no válida.',
-    }));
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    setFoto(file); // Ahora permite File | undefined
-    setFilePreview(file ? URL.createObjectURL(file) : null);
-    setRemoveImage(false); // Reinicia la eliminación de imagen cuando se adjunta una nueva
+    const newFiles = e.target.files ? Array.from(e.target.files) : [];
+    const totalFiles = fotos.length + newFiles.length;
+    if (totalFiles > 5) {
+      message.error('Solo puedes subir hasta 5 imágenes.');
+      return;
+    }
+    setFotos((prevFotos) => [...prevFotos, ...newFiles]);
+    setFilePreviews((prevPreviews) => [
+      ...prevPreviews,
+      ...newFiles.map((file) => URL.createObjectURL(file)),
+    ]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
+  const handleRemoveFoto = (index: number) => {
+    setFotos((prevFotos) => prevFotos.filter((_, i) => i !== index));
+    setFilePreviews((prevPreviews) => prevPreviews.filter((_, i) => i !== index));
+  };
+
+  const validateForm = () => {
+    const isNombreValid = nombreRegex.test(nombre);
+    const isDescripcionValid = descripcion.trim() !== '';
+    const isTelefonoValid = telefonoRegex.test(telefono);
+    const isUrlWazeValid = !urlWaze || urlRegex.test(urlWaze);
+    const isUrlGoogleMapsValid = !urlGoogleMaps || urlRegex.test(urlGoogleMaps);
+    const isWebsiteValid = !website || urlRegex.test(website);
+
+    return (
+      isNombreValid &&
+      isDescripcionValid &&
+      isTelefonoValid &&
+      isUrlWazeValid &&
+      isUrlGoogleMapsValid &&
+      isWebsiteValid
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (Object.values(errors).some((error) => error !== '') || !nombre || !descripcion || !telefono) {
+    if (!validateForm()) {
       message.error('Por favor, corrige los errores en el formulario.');
       return;
     }
 
     try {
-      const servicioData: ServicioSeguridadData = {
-        nombre,
-        direccion,
-        descripcion,
-        telefono,
-        horario,
-        urlWaze,
-        urlGoogleMaps,
+      await createOrUpdateServicioSeguridad({
+        name: nombre,
+        address: direccion,
+        description: descripcion,
+        phoneNumber: telefono,
+        schedule: horario,
+        wazeUrl: urlWaze,
+        googleMapsUrl: urlGoogleMaps,
         website,
-        idServicioSeguridad: servicioId ? parseInt(servicioId, 10) : undefined,
-        foto,
-        eliminarFoto: servicioId && removeImage ? true : undefined, // Ajuste para eliminarFoto
-      };
-
-      await createOrUpdateServicioSeguridad(servicioData);
+        securityServiceId: servicioId ? parseInt(servicioId, 10) : undefined,
+        files: fotos,
+      } as ServicioSeguridadData);
       message.success('Servicio de seguridad guardado correctamente.');
       resetForm();
       router.push('/servicios-seguridad');
@@ -181,16 +152,9 @@ const ServicioSeguridadForm: React.FC = () => {
     setUrlWaze('');
     setUrlGoogleMaps('');
     setWebsite('');
-    setFoto(undefined); // Cambiado a undefined
-    setFilePreview(null);
+    setFotos([]);
+    setFilePreviews([]);
     setErrors({ nombre: '', descripcion: '', telefono: '', urlWaze: '', urlGoogleMaps: '', website: '' });
-    setRemoveImage(undefined); // Reinicia la eliminación de imagen
-  };
-
-  const handleRemoveFoto = () => {
-    setFoto(undefined); // Cambiado a undefined
-    setFilePreview(null);
-    setRemoveImage(true); // Marca la imagen para eliminación
   };
 
   return (
@@ -206,7 +170,7 @@ const ServicioSeguridadForm: React.FC = () => {
                 label="Nombre"
                 fullWidth
                 value={nombre}
-                onChange={handleNombreChange}
+                onChange={(e) => setNombre(e.target.value)}
                 error={Boolean(errors.nombre)}
                 helperText={errors.nombre}
                 required
@@ -228,7 +192,7 @@ const ServicioSeguridadForm: React.FC = () => {
                 required
                 rows={4}
                 value={descripcion}
-                onChange={handleDescripcionChange}
+                onChange={(e) => setDescripcion(e.target.value)}
                 error={Boolean(errors.descripcion)}
                 helperText={errors.descripcion}
               />
@@ -238,7 +202,7 @@ const ServicioSeguridadForm: React.FC = () => {
                 label="Teléfono"
                 fullWidth
                 value={telefono}
-                onChange={handleTelefonoChange}
+                onChange={(e) => setTelefono(e.target.value)}
                 error={Boolean(errors.telefono)}
                 helperText={errors.telefono}
                 required
@@ -257,7 +221,7 @@ const ServicioSeguridadForm: React.FC = () => {
                 label="URL Waze"
                 fullWidth
                 value={urlWaze}
-                onChange={handleUrlWazeChange}
+                onChange={(e) => setUrlWaze(e.target.value)}
                 error={Boolean(errors.urlWaze)}
                 helperText={errors.urlWaze}
               />
@@ -267,7 +231,7 @@ const ServicioSeguridadForm: React.FC = () => {
                 label="URL Google Maps"
                 fullWidth
                 value={urlGoogleMaps}
-                onChange={handleUrlGoogleMapsChange}
+                onChange={(e) => setUrlGoogleMaps(e.target.value)}
                 error={Boolean(errors.urlGoogleMaps)}
                 helperText={errors.urlGoogleMaps}
               />
@@ -277,31 +241,39 @@ const ServicioSeguridadForm: React.FC = () => {
                 label="Website"
                 fullWidth
                 value={website}
-                onChange={handleWebsiteChange}
+                onChange={(e) => setWebsite(e.target.value)}
                 error={Boolean(errors.website)}
                 helperText={errors.website}
               />
             </Grid>
             <Grid item xs={12}>
               <Button variant="contained" component="label">
-              <CameraAlt sx={{ mr: 1 }} /> 
-                Adjutar foto
-                <input type="file" accept="image/*"
-                  hidden onChange={handleFileChange} ref={fileInputRef} />
+                <CameraAlt sx={{ mr: 1 }} />
+                Adjuntar fotos
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  multiple
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
+                />
               </Button>
-              {filePreview && (
+              {filePreviews.length > 0 && (
                 <Grid container spacing={2} mt={2}>
-                  <Grid item xs={4}>
-                    <Box position="relative">
-                      <img src={filePreview} alt="preview" style={{ width: '100%' }} />
-                      <IconButton
-                        onClick={handleRemoveFoto}
-                        style={{ position: 'absolute', top: 0, right: 0 }}
-                      >
-                        <Delete color="error" />
-                      </IconButton>
-                    </Box>
-                  </Grid>
+                  {filePreviews.map((src, index) => (
+                    <Grid item xs={4} key={index}>
+                      <Box position="relative">
+                        <img src={src} alt={`preview-${index}`} style={{ width: '100%' }} />
+                        <IconButton
+                          onClick={() => handleRemoveFoto(index)}
+                          style={{ position: 'absolute', top: 0, right: 0 }}
+                        >
+                          <Delete color="error" />
+                        </IconButton>
+                      </Box>
+                    </Grid>
+                  ))}
                 </Grid>
               )}
             </Grid>
@@ -311,7 +283,7 @@ const ServicioSeguridadForm: React.FC = () => {
                 variant="contained"
                 color="primary"
                 fullWidth
-                disabled={Object.values(errors).some((error) => error !== '') || !nombre || !descripcion || !telefono}
+                disabled={!validateForm()}
               >
                 Guardar
               </Button>
